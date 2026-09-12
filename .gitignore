@@ -10,3 +10,4 @@ dist/
 *.iml
 
 *.log
+email-writer-sb/src/main/resources/application.properties

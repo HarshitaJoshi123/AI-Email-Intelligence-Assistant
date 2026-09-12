@@ -1,5 +1,5 @@
 // STEP 1: Check that the extension content script has loaded
-console.log("Email Writer Extension - Content Script Loaded");
+console.log("MailMind compact analysis UI v1.1.0 loaded");
 
 
 // STEP 2: Create the AI Reply button
@@ -108,43 +108,61 @@ function findComposeToolbar() {
 }
 
 
-// NEW: Create the analysis box
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function truncateText(value, maxLength) {
+    const text = (value || '').trim();
+    if (!text) {
+        return '';
+    }
+    if (text.length <= maxLength) {
+        return text;
+    }
+    return text.slice(0, maxLength).trim() + '…';
+}
+
+
+// Compact Gmail result: status, priority, deadline, action + dashboard link
 function createAnalysisBox(analysis) {
 
-    // Remove old analysis box if it already exists
     const oldBox = document.querySelector('.ai-analysis-box');
 
     if (oldBox) {
         oldBox.remove();
     }
 
-    // Create a new HTML div element
     const box = document.createElement('div');
+    box.className = 'ai-analysis-box mailmind-compact-result';
 
-    // Add our own class to identify the box
-    box.className = 'ai-analysis-box';
+    box.style.background = '#f8fafc';
+    box.style.border = '1px solid #e2e8f0';
+    box.style.borderRadius = '8px';
+    box.style.padding = '8px 10px';
+    box.style.margin = '6px 8px';
+    box.style.fontFamily = 'Google Sans, Roboto, Arial, sans-serif';
+    box.style.fontSize = '12px';
+    box.style.lineHeight = '1.35';
+    box.style.maxWidth = '460px';
+    box.style.display = 'flex';
+    box.style.alignItems = 'center';
+    box.style.justifyContent = 'space-between';
+    box.style.gap = '10px';
+    box.style.boxShadow = 'none';
 
-    // Add styling to make the analysis look like a clean card
-    box.style.background = '#ffffff';
-    box.style.border = '1px solid #dadce0';
-    box.style.borderRadius = '10px';
-    box.style.padding = '16px';
-    box.style.margin = '10px 8px';
-    box.style.fontFamily = 'Arial, sans-serif';
-    box.style.fontSize = '14px';
-    box.style.lineHeight = '1.5';
-    box.style.maxWidth = '620px';
-    box.style.boxShadow = '0 1px 3px rgba(60,64,67,0.15)';
-
-    // Get the priority value
     const priority = analysis.priority || 'LOW';
+    const actionText = analysis.actionRequired
+        ? truncateText(analysis.action || 'Action required', 42)
+        : 'No action';
+    const deadlineText = truncateText(analysis.deadline || 'No deadline', 28);
 
-    // Get the category value
-    const category = analysis.category || 'OTHER';
-
-    // Decide the style for the priority badge
-    let priorityBackground = '#f1f3f4';
-    let priorityText = '#3c4043';
+    let priorityBackground = '#e8f5e9';
+    let priorityText = '#1b5e20';
 
     if (priority === 'HIGH') {
         priorityBackground = '#fce8e6';
@@ -154,132 +172,56 @@ function createAnalysisBox(analysis) {
         priorityText = '#b06000';
     }
 
-    // Decide the style for the category badge
-    const categoryBackground = '#e8f0fe';
-    const categoryText = '#1967d2';
-
-    // Display the AI analysis
     box.innerHTML = `
         <div style="
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 14px;
-            color: #202124;
-        ">
-            ✨ AI Email Analysis
-        </div>
-
-        <div style="
             display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
             flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            flex: 1;
         ">
-
             <span style="
-                background: ${categoryBackground};
-                color: ${categoryText};
-                padding: 5px 10px;
-                border-radius: 14px;
-                font-size: 12px;
+                color: #0f9d58;
                 font-weight: 600;
-            ">
-                ${category}
-            </span>
-
+                white-space: nowrap;
+            ">Analyzed</span>
             <span style="
                 background: ${priorityBackground};
                 color: ${priorityText};
-                padding: 5px 10px;
-                border-radius: 14px;
-                font-size: 12px;
+                padding: 2px 7px;
+                border-radius: 10px;
+                font-size: 11px;
                 font-weight: 600;
-            ">
-                ${priority} PRIORITY
+                white-space: nowrap;
+            ">${escapeHtml(priority)}</span>
+            <span style="color: #5f6368; white-space: nowrap;">
+                ${escapeHtml(deadlineText)}
             </span>
-
-        </div>
-
-
-        <div style="
-            margin-bottom: 14px;
-        ">
-            <div style="
-                font-weight: 600;
-                color: #202124;
-                margin-bottom: 4px;
-            ">
-                Summary
-            </div>
-
-            <div style="color: #5f6368;">
-                ${analysis.summary || 'No summary available'}
-            </div>
-        </div>
-
-
-        <div style="
-            border-top: 1px solid #e8eaed;
-            padding-top: 12px;
-            margin-bottom: 14px;
-        ">
-            <div style="
-                font-weight: 600;
-                color: #202124;
-                margin-bottom: 4px;
-            ">
-                Action
-            </div>
-
-            <div style="color: #5f6368;">
-                ${analysis.actionRequired
-                    ? '✓ ' + (analysis.action || 'Action required')
-                    : '✓ No action required'}
-            </div>
-        </div>
-
-
-        <div style="
-            border-top: 1px solid #e8eaed;
-            padding-top: 12px;
-            margin-bottom: 14px;
-        ">
-            <div style="
-                font-weight: 600;
-                color: #202124;
-                margin-bottom: 4px;
-            ">
-                Deadline
-            </div>
-
-            <div style="color: #5f6368;">
-                ${analysis.deadline || 'No deadline'}
-            </div>
-        </div>
-
-
-        <div style="
-            border-top: 1px solid #e8eaed;
-            padding-top: 12px;
-        ">
-            <div style="
-                font-weight: 600;
-                color: #202124;
-                margin-bottom: 6px;
-            ">
-                Suggested Reply
-            </div>
-
-            <div style="
-                background: #f8f9fa;
-                border: 1px solid #e8eaed;
-                border-radius: 6px;
-                padding: 10px;
+            <span style="
                 color: #3c4043;
-            ">
-                ${analysis.reply || 'No reply generated'}
-            </div>
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 180px;
+            ">${escapeHtml(actionText)}</span>
         </div>
+        <a
+            href="http://localhost:5173/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="
+                flex-shrink: 0;
+                background: #1a73e8;
+                color: #ffffff;
+                text-decoration: none;
+                padding: 5px 9px;
+                border-radius: 6px;
+                font-size: 11px;
+                font-weight: 600;
+                white-space: nowrap;
+            "
+        >View in MailMind</a>
     `;
 
     return box;

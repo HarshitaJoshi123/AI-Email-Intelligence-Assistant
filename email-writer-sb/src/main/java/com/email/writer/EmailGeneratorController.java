@@ -15,6 +15,7 @@ public class EmailGeneratorController {
     private EmailGeneratorService emailGeneratorService;
     private EmailAnalysisRepository emailAnalysisRepository;
     private TwilioWhatsAppService twilioWhatsAppService;
+    private TelegramNotificationService telegramNotificationService;
 
 
     // =========================================================
@@ -108,6 +109,21 @@ public class EmailGeneratorController {
                 "WhatsApp test notification sent successfully. "
                         + "Message SID: "
                         + messageSid
+        );
+    }
+
+
+    @PostMapping("/telegram/test")
+    public ResponseEntity<String> testTelegram() {
+
+        telegramNotificationService.sendMailMindAlert(
+                "HIGH",
+                "Review this MailMind Telegram test alert",
+                "Today"
+        );
+
+        return ResponseEntity.ok(
+                "Telegram test notification sent successfully."
         );
     }
 }

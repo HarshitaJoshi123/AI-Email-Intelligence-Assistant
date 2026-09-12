@@ -8,6 +8,9 @@ function App() {
   const [error, setError] = useState('');
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [completedActions, setCompletedActions] = useState({});
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyPriority, setHistoryPriority] = useState('ALL');
 
   const API_URL = 'http://localhost:8080/api/email';
 
@@ -73,7 +76,6 @@ function App() {
   // DEADLINE HELPERS
   // =========================================================
 
-  // Convert deadlineAt from backend to JavaScript Date
   const getDeadlineDate = (email) => {
     if (!email.deadlineAt) {
       return null;
@@ -88,7 +90,6 @@ function App() {
     return date;
   };
 
-  // Check if two dates are on the same day
   const isSameDay = (date1, date2) => {
     return (
       date1.getFullYear() === date2.getFullYear() &&
@@ -97,7 +98,6 @@ function App() {
     );
   };
 
-  // Check if deadline is tomorrow
   const isTomorrow = (deadlineDate) => {
     const tomorrow = new Date();
 
@@ -106,7 +106,6 @@ function App() {
     return isSameDay(deadlineDate, tomorrow);
   };
 
-  // Decide deadline status
   const getDeadlineStatus = (email) => {
     const deadlineDate = getDeadlineDate(email);
 
@@ -163,6 +162,51 @@ function App() {
   }, [analyses]);
 
   const upcomingDeadlines = deadlineEmails.length;
+
+  // Keep main dashboard focused
+  const recentAnalyses = useMemo(
+    () => analyses.slice(0, 5),
+    [analyses]
+  );
+
+  const visibleDeadlineEmails = useMemo(
+    () => deadlineEmails.slice(0, 5),
+    [deadlineEmails]
+  );
+
+  // =========================================================
+  // HISTORY
+  // =========================================================
+
+  const filteredHistory = useMemo(() => {
+    const query = historySearch.trim().toLowerCase();
+
+    return analyses.filter((email) => {
+      const matchesPriority =
+        historyPriority === 'ALL' ||
+        email.priority === historyPriority;
+
+      const searchableText = [
+        email.category,
+        email.summary,
+        email.action,
+        email.emailContent,
+        email.deadline
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return (
+        matchesPriority &&
+        (!query || searchableText.includes(query))
+      );
+    });
+  }, [
+    analyses,
+    historySearch,
+    historyPriority
+  ]);
 
   // =========================================================
   // CATEGORY DATA
@@ -322,7 +366,6 @@ function App() {
     );
   };
 
-  // Format exact deadline
   const formatDeadlineDateTime = (deadlineAt) => {
     if (!deadlineAt) {
       return '';
@@ -395,6 +438,7 @@ function App() {
 
               <div className="user-info">
                 <span>Harshita</span>
+
                 <small>
                   Personal workspace
                 </small>
@@ -452,7 +496,10 @@ function App() {
             </div>
 
             <div className="stat-content">
-              <span>Total Emails</span>
+
+              <span>
+                Total Emails
+              </span>
 
               <strong>
                 {totalEmails}
@@ -461,6 +508,7 @@ function App() {
               <small>
                 Analyzed emails
               </small>
+
             </div>
 
           </div>
@@ -472,7 +520,10 @@ function App() {
             </div>
 
             <div className="stat-content">
-              <span>High Priority</span>
+
+              <span>
+                High Priority
+              </span>
 
               <strong>
                 {highPriority}
@@ -481,6 +532,7 @@ function App() {
               <small>
                 Need attention
               </small>
+
             </div>
 
           </div>
@@ -492,7 +544,10 @@ function App() {
             </div>
 
             <div className="stat-content">
-              <span>Action Required</span>
+
+              <span>
+                Action Required
+              </span>
 
               <strong>
                 {actionRequired}
@@ -501,6 +556,7 @@ function App() {
               <small>
                 Pending actions
               </small>
+
             </div>
 
           </div>
@@ -512,7 +568,10 @@ function App() {
             </div>
 
             <div className="stat-content">
-              <span>Deadlines</span>
+
+              <span>
+                Deadlines
+              </span>
 
               <strong>
                 {upcomingDeadlines}
@@ -521,6 +580,7 @@ function App() {
               <small>
                 Need tracking
               </small>
+
             </div>
 
           </div>
@@ -532,13 +592,17 @@ function App() {
         =================================================== */}
 
         {loading && (
+
           <div className="loading-state">
+
             <div className="loader"></div>
 
             <p>
               Loading your email intelligence...
             </p>
+
           </div>
+
         )}
 
         {/* ===================================================
@@ -546,19 +610,25 @@ function App() {
         =================================================== */}
 
         {!loading && error && (
+
           <div className="error-state">
 
             <div className="error-icon">
               !
             </div>
 
-            <p>{error}</p>
+            <p>
+              {error}
+            </p>
 
-            <button onClick={fetchAnalyses}>
+            <button
+              onClick={fetchAnalyses}
+            >
               Try Again
             </button>
 
           </div>
+
         )}
 
         {/* ===================================================
@@ -566,6 +636,7 @@ function App() {
         =================================================== */}
 
         {!loading && !error && (
+
           <>
 
             {/* =================================================
@@ -581,6 +652,7 @@ function App() {
                 <div className="panel-header">
 
                   <div>
+
                     <h2>
                       Email Overview
                     </h2>
@@ -588,6 +660,7 @@ function App() {
                     <p>
                       Distribution by category
                     </p>
+
                   </div>
 
                   <span className="panel-badge">
@@ -619,14 +692,18 @@ function App() {
                               );
 
                         return (
+
                           <div
                             className="category-row"
                             key={category}
                           >
 
                             <div className="category-name">
+
                               <span className="category-dot"></span>
+
                               {category}
+
                             </div>
 
                             <div className="category-bar-wrapper">
@@ -646,11 +723,13 @@ function App() {
                             </span>
 
                           </div>
+
                         );
                       }
                     )}
 
                   </div>
+
                 )}
 
               </div>
@@ -662,6 +741,7 @@ function App() {
                 <div className="panel-header">
 
                   <div>
+
                     <h2>
                       Priority Overview
                     </h2>
@@ -669,6 +749,7 @@ function App() {
                     <p>
                       How your inbox is looking
                     </p>
+
                   </div>
 
                 </div>
@@ -697,6 +778,7 @@ function App() {
                   <div className="priority-legend">
 
                     <div className="legend-item">
+
                       <span className="legend-dot high"></span>
 
                       <span>
@@ -706,9 +788,11 @@ function App() {
                       <strong>
                         {highPriority}
                       </strong>
+
                     </div>
 
                     <div className="legend-item">
+
                       <span className="legend-dot medium"></span>
 
                       <span>
@@ -718,9 +802,11 @@ function App() {
                       <strong>
                         {mediumPriority}
                       </strong>
+
                     </div>
 
                     <div className="legend-item">
+
                       <span className="legend-dot low"></span>
 
                       <span>
@@ -730,6 +816,7 @@ function App() {
                       <strong>
                         {lowPriority}
                       </strong>
+
                     </div>
 
                   </div>
@@ -749,6 +836,7 @@ function App() {
               <div className="section-title-row">
 
                 <div>
+
                   <p className="eyebrow">
                     YOUR EMAILS
                   </p>
@@ -756,11 +844,29 @@ function App() {
                   <h2>
                     Recent Intelligence
                   </h2>
+
                 </div>
 
-                <span className="email-count">
-                  {totalEmails} analyzed
-                </span>
+                <div className="section-actions">
+
+                  <span className="email-count">
+                    {totalEmails} analyzed
+                  </span>
+
+                  {totalEmails > 5 && (
+
+                    <button
+                      className="view-all-button"
+                      onClick={() =>
+                        setHistoryOpen(true)
+                      }
+                    >
+                      View all →
+                    </button>
+
+                  )}
+
+                </div>
 
               </div>
 
@@ -788,7 +894,7 @@ function App() {
 
                 <div className="email-list">
 
-                  {analyses.map((email) => {
+                  {recentAnalyses.map((email) => {
 
                     const completed =
                       completedActions[email.id] ||
@@ -808,15 +914,11 @@ function App() {
                         }
                       >
 
-                        {/* EMAIL ICON */}
-
                         <div className="email-avatar">
                           {email.category
                             ? email.category.charAt(0)
                             : 'E'}
                         </div>
-
-                        {/* EMAIL DETAILS */}
 
                         <div className="email-main">
 
@@ -850,7 +952,9 @@ function App() {
                             </span>
 
                             {email.deadline && (
+
                               <>
+
                                 <span className="meta-separator">
                                   •
                                 </span>
@@ -858,14 +962,14 @@ function App() {
                                 <span className="deadline-text">
                                   ◷ {email.deadline}
                                 </span>
+
                               </>
+
                             )}
 
                           </div>
 
                         </div>
-
-                        {/* ACTION */}
 
                         <div
                           className="email-action"
@@ -925,9 +1029,11 @@ function App() {
                       </div>
 
                     );
+
                   })}
 
                 </div>
+
               )}
 
             </section>
@@ -943,6 +1049,7 @@ function App() {
                 <div className="section-title-row">
 
                   <div>
+
                     <p className="eyebrow">
                       ACTION TRACKER
                     </p>
@@ -950,16 +1057,34 @@ function App() {
                     <h2>
                       Deadline Tracker
                     </h2>
+
                   </div>
+
+                  {deadlineEmails.length > 5 && (
+
+                    <button
+                      className="view-all-button"
+                      onClick={() =>
+                        setHistoryOpen(true)
+                      }
+                    >
+                      View all →
+                    </button>
+
+                  )}
 
                 </div>
 
                 <div className="deadline-list">
 
-                  {deadlineEmails.map((email) => {
+                  {visibleDeadlineEmails.map((email) => {
 
                     const deadlineStatus =
                       getDeadlineStatus(email);
+
+                    const completed =
+                      completedActions[email.id] ||
+                      false;
 
                     return (
 
@@ -986,8 +1111,6 @@ function App() {
 
                         </div>
 
-                        {/* DEADLINE INFORMATION */}
-
                         <div
                           className={`deadline-time deadline-${deadlineStatus.type}`}
                         >
@@ -1008,9 +1131,58 @@ function App() {
 
                         </div>
 
+                        {/* MARK DEADLINE TASK AS DONE */}
+
+                        <div
+                          className="deadline-action"
+                          onClick={(event) =>
+                            event.stopPropagation()
+                          }
+                        >
+
+                          <label
+                            className={`action-check ${
+                              completed
+                                ? 'done'
+                                : ''
+                            }`}
+                            title={
+                              completed
+                                ? 'Mark as pending'
+                                : 'Mark as done'
+                            }
+                          >
+
+                            <input
+                              type="checkbox"
+                              checked={completed}
+                              onChange={() =>
+                                toggleAction(
+                                  email.id
+                                )
+                              }
+                            />
+
+                            <span className="custom-checkbox">
+                              {completed
+                                ? '✓'
+                                : ''}
+                            </span>
+
+                            <span className="action-label">
+                              {completed
+                                ? 'Completed'
+                                : 'Mark done'}
+                            </span>
+
+                          </label>
+
+                        </div>
+
                       </div>
 
                     );
+
                   })}
 
                 </div>
@@ -1020,9 +1192,250 @@ function App() {
             )}
 
           </>
+
         )}
 
       </main>
+
+      {/* =====================================================
+          ALL ANALYZED EMAILS
+      ===================================================== */}
+
+      {historyOpen && (
+
+        <div
+          className="modal-overlay"
+          onClick={() =>
+            setHistoryOpen(false)
+          }
+        >
+
+          <div
+            className="history-modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+
+            <div className="history-header">
+
+              <div>
+
+                <span className="modal-label">
+                  EMAIL HISTORY
+                </span>
+
+                <h2>
+                  All Analyzed Emails
+                </h2>
+
+                <p>
+                  Search your complete MailMind
+                  intelligence history.
+                </p>
+
+              </div>
+
+              <button
+                className="close-button"
+                onClick={() =>
+                  setHistoryOpen(false)
+                }
+              >
+                ×
+              </button>
+
+            </div>
+
+            <div className="history-controls">
+
+              <input
+                className="history-search"
+                type="search"
+                placeholder="Search emails, actions, categories..."
+                value={historySearch}
+                onChange={(event) =>
+                  setHistorySearch(
+                    event.target.value
+                  )
+                }
+              />
+
+              <div className="history-filters">
+
+                {[
+                  'ALL',
+                  'HIGH',
+                  'MEDIUM',
+                  'LOW'
+                ].map((priority) => (
+
+                  <button
+                    key={priority}
+                    className={`history-filter ${
+                      historyPriority === priority
+                        ? 'active'
+                        : ''
+                    }`}
+                    onClick={() =>
+                      setHistoryPriority(
+                        priority
+                      )
+                    }
+                  >
+                    {priority === 'ALL'
+                      ? 'All'
+                      : priority}
+                  </button>
+
+                ))}
+
+              </div>
+
+            </div>
+
+            <div className="history-list">
+
+              {filteredHistory.length === 0 ? (
+
+                <div className="history-empty">
+                  No emails match your search.
+                </div>
+
+              ) : (
+
+                filteredHistory.map((email) => {
+
+                  const completed =
+                    completedActions[email.id] ||
+                    false;
+
+                  return (
+
+                    <div
+                      className={`history-row ${
+                        completed
+                          ? 'completed'
+                          : ''
+                      }`}
+                      key={email.id}
+                      onClick={() => {
+                        setHistoryOpen(false);
+                        setSelectedEmail(email);
+                      }}
+                    >
+
+                      <span className="history-avatar">
+                        {(email.category || 'E')
+                          .charAt(0)}
+                      </span>
+
+                      <div className="history-main">
+
+                        <div className="history-title">
+
+                          <span>
+                            {email.category ||
+                              'Email'}
+                          </span>
+
+                          <span
+                            className={`priority-badge ${
+                              getPriorityClass(
+                                email.priority
+                              )
+                            }`}
+                          >
+                            {email.priority}
+                          </span>
+
+                        </div>
+
+                        <span className="history-summary">
+                          {email.summary ||
+                            'No summary available'}
+                        </span>
+
+                        {email.deadline && (
+
+                          <span className="history-deadline">
+                            ◷ {email.deadline}
+                          </span>
+
+                        )}
+
+                      </div>
+
+                      <div
+                        className="history-status"
+                        onClick={(event) =>
+                          event.stopPropagation()
+                        }
+                      >
+
+                        {email.actionRequired ? (
+
+                          <label
+                            className={`action-check ${
+                              completed
+                                ? 'done'
+                                : ''
+                            }`}
+                          >
+
+                            <input
+                              type="checkbox"
+                              checked={completed}
+                              onChange={() =>
+                                toggleAction(
+                                  email.id
+                                )
+                              }
+                            />
+
+                            <span className="custom-checkbox">
+                              {completed
+                                ? '✓'
+                                : ''}
+                            </span>
+
+                            <span className="action-label">
+                              {completed
+                                ? 'Completed'
+                                : 'Mark done'}
+                            </span>
+
+                          </label>
+
+                        ) : (
+
+                          <span className="no-action">
+                            No action
+                          </span>
+
+                        )}
+
+                      </div>
+
+                      <span className="email-arrow">
+                        →
+                      </span>
+
+                    </div>
+
+                  );
+
+                })
+
+              )}
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
 
       {/* =====================================================
           EMAIL DETAIL MODAL
@@ -1134,15 +1547,50 @@ function App() {
 
                 </div>
 
-                <span className="action-pill">
+                <label
+                  className={`action-check modal-action-check ${
+                    completedActions[
+                      selectedEmail.id
+                    ]
+                      ? 'done'
+                      : ''
+                  }`}
+                  onClick={(event) =>
+                    event.stopPropagation()
+                  }
+                >
 
-                  {completedActions[
-                    selectedEmail.id
-                  ]
-                    ? '✓ Completed'
-                    : 'Pending'}
+                  <input
+                    type="checkbox"
+                    checked={
+                      completedActions[
+                        selectedEmail.id
+                      ] || false
+                    }
+                    onChange={() =>
+                      toggleAction(
+                        selectedEmail.id
+                      )
+                    }
+                  />
 
-                </span>
+                  <span className="custom-checkbox">
+                    {completedActions[
+                      selectedEmail.id
+                    ]
+                      ? '✓'
+                      : ''}
+                  </span>
+
+                  <span className="action-label">
+                    {completedActions[
+                      selectedEmail.id
+                    ]
+                      ? 'Completed'
+                      : 'Mark as done'}
+                  </span>
+
+                </label>
 
               </div>
 
@@ -1169,11 +1617,13 @@ function App() {
                   </strong>
 
                   {selectedEmail.deadlineAt && (
+
                     <small>
                       {formatDeadlineDateTime(
                         selectedEmail.deadlineAt
                       )}
                     </small>
+
                   )}
 
                 </div>
@@ -1213,7 +1663,7 @@ function App() {
                   setSelectedEmail(null)
                 }
               >
-                Done
+                Close
               </button>
 
             </div>

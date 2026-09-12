@@ -289,8 +289,10 @@ public class EmailGeneratorService {
 
         // Save creation time
         entity.setCreatedAt(
-                LocalDateTime.now()
+                LocalDateTime.now(ZoneId.of("Asia/Kolkata"))
         );
+        entity.setOneHourReminderSent(false);
+        entity.setTenMinuteReminderSent(false);
 
 
         // =====================================================

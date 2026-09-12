@@ -1,7 +1,7 @@
 {
     "name": "Email Writer Assitant",
     "description": "AI-powered email reply generator",
-    "version": "1.0",
+    "version": "1.1.0",
     "manifest_version": 3,
     "permissions": ["activeTab", "storage"],
     "host_permissions": [
@@ -12,7 +12,6 @@
         {
             "js": ["content.js"],
             "matches": ["*://mail.google.com/*"],
-            "css": ["content.css"],
             "run_at": "document_end"
         }
     ],

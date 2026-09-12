@@ -52,4 +52,10 @@ public class EmailAnalysisEntity {
 
     // Time when analysis was created
     private LocalDateTime createdAt;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean oneHourReminderSent = false;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean tenMinuteReminderSent = false;
 }
