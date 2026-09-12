@@ -13,9 +13,7 @@ import java.util.List;
 public class EmailGeneratorController {
 
     private EmailGeneratorService emailGeneratorService;
-
     private EmailAnalysisRepository emailAnalysisRepository;
-
     private TwilioWhatsAppService twilioWhatsAppService;
 
 

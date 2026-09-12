@@ -255,6 +255,7 @@ public class EmailGeneratorService {
                         "Invalid deadlineAt received from AI: "
                                 + deadlineAt
                 );
+
             }
 
         } else {
@@ -366,7 +367,7 @@ public class EmailGeneratorService {
                                 + deadline;
 
 
-                // Send dynamic WhatsApp message
+                // Send WhatsApp message
                 twilioWhatsAppService.sendWhatsAppMessage(
                         whatsappMessage
                 );
