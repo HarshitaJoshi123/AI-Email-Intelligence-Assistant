@@ -44,7 +44,6 @@ The platform is built using a modern, scalable microservices architecture, separ
 - **Database:** PostgreSQL (Email intelligence storage, action tracking)
 - **AI Microservices:** Google Gemini AI (Email analysis, categorization, synthesis)
 - **Machine Learning:** NLP Models (Sentiment analysis, deadline extraction, action detection)
-- **Integrations:** Twilio (WhatsApp Business API integration)
 - **Browser Extension:** Chrome Extension APIs (Seamless Gmail integration)
 - **DevOps:** Git (Version control and deployment workflows)
 
