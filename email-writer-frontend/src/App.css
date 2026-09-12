@@ -1,0 +1,1813 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* =========================================================
+   GENERAL
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #f6f7fb;
+  color: #171923;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* =========================================================
+   APP
+========================================================= */
+
+.app {
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at 85% 0%,
+      rgba(99, 102, 241, 0.08),
+      transparent 30%
+    ),
+    #f6f7fb;
+}
+
+/* =========================================================
+   TOP BAR
+========================================================= */
+
+.topbar {
+  width: 100%;
+  height: 76px;
+
+  background: rgba(255, 255, 255, 0.94);
+
+  border-bottom: 1px solid #e8eaf0;
+
+  position: sticky;
+  top: 0;
+
+  z-index: 20;
+
+  backdrop-filter: blur(14px);
+}
+
+.topbar-inner {
+  width: 100%;
+  max-width: 1500px;
+
+  height: 100%;
+
+  margin: auto;
+
+  padding: 0 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon {
+  width: 41px;
+  height: 41px;
+
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #4f46e5,
+      #7c3aed
+    );
+
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  box-shadow:
+    0 6px 16px
+    rgba(79, 70, 229, 0.25);
+}
+
+.brand-name {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.brand-tagline {
+  font-size: 10px;
+  color: #8b90a0;
+  margin-top: 3px;
+}
+
+/* =========================================================
+   USER / REFRESH
+========================================================= */
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.refresh-button {
+  width: 38px;
+  height: 38px;
+
+  border: 1px solid #e4e6ed;
+
+  background: white;
+
+  border-radius: 10px;
+
+  font-size: 20px;
+  color: #626777;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.refresh-button:hover {
+  background: #f5f6ff;
+  color: #4f46e5;
+  transform: rotate(25deg);
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 39px;
+  height: 39px;
+
+  border-radius: 50%;
+
+  background: #ede9fe;
+  color: #5b21b6;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 700;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-info span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.user-info small {
+  color: #969baa;
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+/* =========================================================
+   MAIN CONTENT
+========================================================= */
+
+.main-content {
+  width: 100%;
+  max-width: 1500px;
+
+  margin: auto;
+
+  padding: 48px 42px 80px;
+}
+
+/* =========================================================
+   WELCOME
+========================================================= */
+
+.welcome-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+
+  margin-bottom: 32px;
+
+  animation: fadeUp 0.5s ease;
+}
+
+.eyebrow {
+  color: #6366f1;
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  letter-spacing: 1.3px;
+
+  margin: 0 0 9px;
+}
+
+.welcome-section h1 {
+  font-size: 36px;
+
+  letter-spacing: -1.2px;
+
+  margin: 0;
+
+  font-weight: 700;
+}
+
+.welcome-text {
+  color: #777d8d;
+
+  margin: 10px 0 0;
+
+  font-size: 14px;
+}
+
+.live-status {
+  background: #f0fdf4;
+
+  color: #15803d;
+
+  border: 1px solid #dcfce7;
+
+  padding: 10px 15px;
+
+  border-radius: 30px;
+
+  font-size: 11px;
+
+  font-weight: 600;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+
+  display: inline-block;
+
+  background: #22c55e;
+
+  border-radius: 50%;
+
+  margin-right: 7px;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(34, 197, 94, 0.1);
+}
+
+/* =========================================================
+   STAT CARDS
+========================================================= */
+
+.stats-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, 1fr);
+
+  gap: 17px;
+
+  margin-bottom: 27px;
+}
+
+.stat-card {
+  background: white;
+
+  border: 1px solid #e9eaf0;
+
+  border-radius: 14px;
+
+  padding: 22px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+
+  box-shadow:
+    0 3px 15px
+    rgba(25, 28, 45, 0.035);
+
+  animation:
+    fadeUp 0.55s ease both;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 10px 25px
+    rgba(25, 28, 45, 0.07);
+}
+
+.stat-icon {
+  width: 46px;
+  height: 46px;
+
+  border-radius: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 19px;
+
+  font-weight: 700;
+
+  flex-shrink: 0;
+}
+
+.stat-icon.blue {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.stat-icon.red {
+  background: #fff1f2;
+  color: #e11d48;
+}
+
+.stat-icon.purple {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+.stat-icon.orange {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-content span {
+  color: #73798a;
+
+  font-size: 12px;
+
+  font-weight: 500;
+}
+
+.stat-content strong {
+  font-size: 27px;
+
+  margin: 3px 0;
+
+  letter-spacing: -0.5px;
+}
+
+.stat-content small {
+  color: #a0a4af;
+
+  font-size: 10px;
+}
+
+/* =========================================================
+   OVERVIEW PANELS
+========================================================= */
+
+.overview-grid {
+  display: grid;
+
+  grid-template-columns:
+    1.35fr 1fr;
+
+  gap: 18px;
+
+  margin-bottom: 40px;
+}
+
+.panel {
+  background: white;
+
+  border: 1px solid #e9eaf0;
+
+  border-radius: 15px;
+
+  padding: 25px;
+
+  box-shadow:
+    0 3px 15px
+    rgba(25, 28, 45, 0.035);
+
+  animation:
+    fadeUp 0.65s ease both;
+}
+
+.panel-header {
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  margin-bottom: 27px;
+}
+
+.panel-header h2 {
+  margin: 0;
+
+  font-size: 16px;
+
+  letter-spacing: -0.2px;
+}
+
+.panel-header p {
+  color: #969baa;
+
+  margin: 6px 0 0;
+
+  font-size: 11px;
+}
+
+.panel-badge {
+  background: #f4f4ff;
+
+  color: #5b5bd6;
+
+  padding: 6px 10px;
+
+  border-radius: 7px;
+
+  font-size: 9px;
+
+  font-weight: 600;
+}
+
+/* =========================================================
+   CATEGORY
+========================================================= */
+
+.category-list {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 18px;
+}
+
+.category-row {
+  display: grid;
+
+  grid-template-columns:
+    110px 1fr 25px;
+
+  align-items: center;
+
+  gap: 13px;
+}
+
+.category-name {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  font-size: 11px;
+
+  color: #5f6472;
+
+  font-weight: 500;
+}
+
+.category-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #6366f1;
+}
+
+.category-bar-wrapper {
+  height: 7px;
+
+  background: #f0f1f5;
+
+  border-radius: 10px;
+
+  overflow: hidden;
+}
+
+.category-bar {
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      #6366f1,
+      #8b5cf6
+    );
+
+  border-radius: 10px;
+
+  transition:
+    width 0.8s ease;
+}
+
+.category-count {
+  color: #4b5060;
+
+  font-size: 10px;
+
+  font-weight: 600;
+
+  text-align: right;
+}
+
+/* =========================================================
+   PRIORITY CHART
+========================================================= */
+
+.priority-content {
+  display: flex;
+
+  align-items: center;
+
+  gap: 42px;
+}
+
+.priority-chart {
+  width: 135px;
+  height: 135px;
+
+  border-radius: 50%;
+
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  transition:
+    background 0.8s ease;
+
+  flex-shrink: 0;
+}
+
+.priority-chart-inner {
+  width: 96px;
+  height: 96px;
+
+  background: white;
+
+  border-radius: 50%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+}
+
+.priority-chart-inner strong {
+  font-size: 25px;
+}
+
+.priority-chart-inner span {
+  color: #999eab;
+
+  font-size: 9px;
+
+  margin-top: 2px;
+}
+
+.priority-legend {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 17px;
+
+  flex: 1;
+}
+
+.legend-item {
+  display: grid;
+
+  grid-template-columns:
+    8px 1fr auto;
+
+  align-items: center;
+
+  gap: 9px;
+
+  font-size: 11px;
+
+  color: #777d8d;
+}
+
+.legend-item strong {
+  color: #252936;
+
+  font-size: 12px;
+}
+
+.legend-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+}
+
+.legend-dot.high {
+  background: #ef4444;
+}
+
+.legend-dot.medium {
+  background: #f59e0b;
+}
+
+.legend-dot.low {
+  background: #22c55e;
+}
+
+/* =========================================================
+   EMAIL SECTION
+========================================================= */
+
+.emails-section {
+  animation:
+    fadeUp 0.7s ease both;
+}
+
+.section-title-row {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: flex-end;
+
+  margin-bottom: 17px;
+}
+
+.section-title-row h2 {
+  margin: 0;
+
+  font-size: 21px;
+
+  letter-spacing: -0.5px;
+}
+
+.email-count {
+  color: #8b90a0;
+
+  font-size: 10px;
+
+  background: white;
+
+  border: 1px solid #e7e8ee;
+
+  padding: 7px 10px;
+
+  border-radius: 7px;
+}
+
+.email-list {
+  background: white;
+
+  border: 1px solid #e8e9ef;
+
+  border-radius: 15px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 3px 15px
+    rgba(25, 28, 45, 0.035);
+}
+
+/* =========================================================
+   EMAIL ROW
+========================================================= */
+
+.email-row {
+  min-height: 105px;
+
+  padding: 19px 21px;
+
+  display: grid;
+
+  grid-template-columns:
+    43px 1fr auto 20px;
+
+  align-items: center;
+
+  gap: 16px;
+
+  border-bottom: 1px solid #f0f1f5;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease;
+}
+
+.email-row:last-child {
+  border-bottom: none;
+}
+
+.email-row:hover {
+  background: #fafaff;
+}
+
+.email-row.completed {
+  opacity: 0.62;
+}
+
+.email-avatar {
+  width: 41px;
+  height: 41px;
+
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #eef2ff,
+      #f5f3ff
+    );
+
+  color: #5b5bd6;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-weight: 700;
+
+  font-size: 13px;
+}
+
+.email-main {
+  min-width: 0;
+}
+
+.email-top-line {
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+}
+
+.email-top-line h3 {
+  margin: 0;
+
+  font-size: 14px;
+
+  font-weight: 600;
+}
+
+/* =========================================================
+   PRIORITY BADGES
+========================================================= */
+
+.priority-badge {
+  display: inline-flex;
+
+  align-items: center;
+
+  padding: 4px 8px;
+
+  border-radius: 6px;
+
+  font-size: 8px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.3px;
+}
+
+.priority-badge.high {
+  background: #fff0f1;
+
+  color: #dc2626;
+}
+
+.priority-badge.medium {
+  background: #fff7e6;
+
+  color: #c2410c;
+}
+
+.priority-badge.low {
+  background: #ecfdf3;
+
+  color: #15803d;
+}
+
+/* =========================================================
+   EMAIL TEXT
+========================================================= */
+
+.email-summary {
+  color: #777d8b;
+
+  font-size: 12px;
+
+  margin: 7px 0;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  max-width: 850px;
+}
+
+.email-meta {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  color: #a0a4af;
+
+  font-size: 9px;
+}
+
+.meta-separator {
+  color: #d0d2d9;
+}
+
+.deadline-text {
+  color: #ea580c;
+
+  font-weight: 500;
+}
+
+/* =========================================================
+   ACTION CHECKBOX
+========================================================= */
+
+.email-action {
+  min-width: 105px;
+}
+
+.action-check {
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  cursor: pointer;
+}
+
+.action-check input {
+  display: none;
+}
+
+.custom-checkbox {
+  width: 18px;
+  height: 18px;
+
+  border: 1.5px solid #c9ccd5;
+
+  border-radius: 5px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 11px;
+
+  color: white;
+
+  transition: all 0.2s ease;
+}
+
+.action-check.done .custom-checkbox {
+  background: #22c55e;
+
+  border-color: #22c55e;
+}
+
+.action-label {
+  color: #73798a;
+
+  font-size: 9px;
+
+  font-weight: 500;
+}
+
+.action-check.done .action-label {
+  color: #16a34a;
+}
+
+.no-action {
+  color: #a1a5b0;
+
+  font-size: 9px;
+}
+
+.email-arrow {
+  color: #b2b5bf;
+
+  font-size: 18px;
+
+  transition:
+    transform 0.2s ease;
+}
+
+.email-row:hover .email-arrow {
+  transform:
+    translateX(4px);
+
+  color: #6366f1;
+}
+
+/* =========================================================
+   DEADLINE TRACKER
+========================================================= */
+
+.deadline-section {
+  margin-top: 42px;
+
+  animation:
+    fadeUp 0.8s ease both;
+}
+
+.deadline-list {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 13px;
+}
+
+.deadline-card {
+  background: white;
+
+  border: 1px solid #e8e9ef;
+
+  border-radius: 12px;
+
+  padding: 17px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 13px;
+
+  transition:
+    0.2s ease;
+}
+
+.deadline-card:hover {
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 7px 20px
+    rgba(25, 28, 45, 0.06);
+}
+
+.deadline-icon {
+  width: 38px;
+  height: 38px;
+
+  background: #fff7ed;
+
+  color: #ea580c;
+
+  border-radius: 10px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+.deadline-info {
+  flex: 1;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+
+  min-width: 0;
+}
+
+.deadline-info strong {
+  font-size: 11px;
+
+  font-weight: 600;
+
+  line-height: 1.4;
+}
+
+.deadline-info span {
+  color: #999eaa;
+
+  font-size: 9px;
+}
+
+/* =========================================================
+   UPDATED DEADLINE INFORMATION
+========================================================= */
+
+.deadline-time {
+  min-width: 155px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  gap: 3px;
+
+  padding: 9px 11px;
+
+  border-radius: 8px;
+
+  background: #fff7ed;
+
+  color: #ea580c;
+
+  flex-shrink: 0;
+}
+
+.deadline-status {
+  font-size: 8px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.2px;
+}
+
+.deadline-original {
+  font-size: 10px;
+
+  font-weight: 600;
+
+  color: #c2410c;
+
+  white-space: nowrap;
+}
+
+.deadline-exact {
+  font-size: 8px;
+
+  font-weight: 500;
+
+  color: #9a5a25;
+
+  white-space: nowrap;
+}
+
+/* OVERDUE */
+
+.deadline-overdue {
+  background: #fff1f2;
+
+  color: #dc2626;
+}
+
+.deadline-overdue .deadline-original {
+  color: #b91c1c;
+}
+
+.deadline-overdue .deadline-exact {
+  color: #be123c;
+}
+
+/* TODAY */
+
+.deadline-today {
+  background: #fff7ed;
+
+  color: #ea580c;
+}
+
+/* TOMORROW */
+
+.deadline-tomorrow {
+  background: #fffbeb;
+
+  color: #d97706;
+}
+
+/* UPCOMING */
+
+.deadline-upcoming {
+  background: #f5f3ff;
+
+  color: #6366f1;
+}
+
+.deadline-upcoming .deadline-original {
+  color: #5b21b6;
+}
+
+.deadline-upcoming .deadline-exact {
+  color: #7c3aed;
+}
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.loading-state {
+  height: 300px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  color: #858a99;
+
+  font-size: 12px;
+}
+
+.loader {
+  width: 30px;
+  height: 30px;
+
+  border: 3px solid #e5e7eb;
+
+  border-top-color: #6366f1;
+
+  border-radius: 50%;
+
+  animation:
+    spin 0.8s linear infinite;
+
+  margin-bottom: 13px;
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.error-state {
+  background: white;
+
+  border: 1px solid #fee2e2;
+
+  border-radius: 13px;
+
+  padding: 30px;
+
+  text-align: center;
+
+  color: #dc2626;
+}
+
+.error-icon {
+  width: 30px;
+  height: 30px;
+
+  margin: auto;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background: #fff1f2;
+
+  border-radius: 50%;
+
+  font-weight: 700;
+}
+
+.error-state button {
+  border: none;
+
+  background: #6366f1;
+
+  color: white;
+
+  padding: 8px 14px;
+
+  border-radius: 7px;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty-state {
+  background: white;
+
+  border: 1px solid #e8e9ef;
+
+  border-radius: 15px;
+
+  text-align: center;
+
+  padding: 55px 20px;
+}
+
+.empty-icon {
+  width: 50px;
+  height: 50px;
+
+  margin: auto;
+
+  border-radius: 14px;
+
+  background: #eef2ff;
+
+  color: #6366f1;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 20px;
+}
+
+.empty-state h3 {
+  font-size: 15px;
+
+  margin: 15px 0 7px;
+}
+
+.empty-state p {
+  color: #9297a4;
+
+  font-size: 11px;
+
+  max-width: 420px;
+
+  margin: auto;
+
+  line-height: 1.6;
+}
+
+.empty-small {
+  color: #a0a4af;
+
+  font-size: 11px;
+}
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  background:
+    rgba(15, 18, 30, 0.42);
+
+  backdrop-filter:
+    blur(5px);
+
+  z-index: 50;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  padding: 20px;
+
+  animation:
+    fadeIn 0.2s ease;
+}
+
+.email-modal {
+  width: 100%;
+
+  max-width: 650px;
+
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  background: white;
+
+  border-radius: 18px;
+
+  padding: 29px;
+
+  box-shadow:
+    0 25px 70px
+    rgba(20, 22, 40, 0.2);
+
+  animation:
+    modalUp 0.25s ease;
+}
+
+.modal-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: flex-start;
+}
+
+.modal-label {
+  color: #6366f1;
+
+  font-size: 9px;
+
+  font-weight: 700;
+
+  letter-spacing: 1px;
+}
+
+.modal-header h2 {
+  margin: 6px 0 0;
+
+  font-size: 23px;
+}
+
+.close-button {
+  border: none;
+
+  background: #f4f5f8;
+
+  width: 33px;
+  height: 33px;
+
+  border-radius: 9px;
+
+  font-size: 21px;
+
+  color: #666b79;
+
+  cursor: pointer;
+}
+
+.close-button:hover {
+  background: #ececf3;
+}
+
+/* =========================================================
+   MODAL TAGS
+========================================================= */
+
+.modal-tags {
+  display: flex;
+
+  gap: 7px;
+
+  margin: 20px 0 25px;
+}
+
+.category-badge {
+  background: #f4f4ff;
+
+  color: #5b5bd6;
+
+  padding: 5px 9px;
+
+  border-radius: 6px;
+
+  font-size: 8px;
+
+  font-weight: 700;
+}
+
+/* =========================================================
+   MODAL CONTENT
+========================================================= */
+
+.detail-block {
+  margin-bottom: 22px;
+}
+
+.detail-label {
+  display: block;
+
+  color: #969aa7;
+
+  font-size: 8px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.8px;
+
+  margin-bottom: 8px;
+}
+
+.detail-block p {
+  margin: 0;
+
+  color: #525765;
+
+  font-size: 11px;
+
+  line-height: 1.7;
+}
+
+.original-email {
+  background: #f7f8fb;
+
+  border: 1px solid #eceef3;
+
+  border-radius: 9px;
+
+  padding: 14px;
+
+  color: #555b69;
+
+  font-size: 11px;
+
+  line-height: 1.7;
+
+  white-space: pre-wrap;
+}
+
+/* =========================================================
+   MODAL ACTION
+========================================================= */
+
+.detail-action {
+  background: #f7f8ff;
+
+  border: 1px solid #e6e7ff;
+
+  border-radius: 10px;
+
+  padding: 14px;
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 15px;
+}
+
+.detail-action p {
+  margin: 5px 0 0;
+
+  font-size: 11px;
+
+  color: #4e5361;
+}
+
+.action-pill {
+  background: #fff7ed;
+
+  color: #ea580c;
+
+  padding: 6px 9px;
+
+  border-radius: 6px;
+
+  font-size: 8px;
+
+  font-weight: 700;
+}
+
+/* =========================================================
+   MODAL DEADLINE
+========================================================= */
+
+.detail-deadline {
+  display: flex;
+
+  align-items: center;
+
+  gap: 11px;
+
+  background: #fff8f1;
+
+  border: 1px solid #ffead5;
+
+  padding: 13px;
+
+  border-radius: 10px;
+
+  margin-bottom: 22px;
+
+  color: #ea580c;
+}
+
+.detail-deadline > span {
+  font-size: 20px;
+}
+
+.detail-deadline div {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.detail-deadline small {
+  font-size: 8px;
+
+  color: #b45309;
+}
+
+.detail-deadline strong {
+  font-size: 11px;
+}
+
+/* =========================================================
+   REPLY
+========================================================= */
+
+.reply-preview {
+  background: #f8f8ff;
+
+  border: 1px solid #e8e8ff;
+
+  border-radius: 10px;
+
+  padding: 15px;
+}
+
+/* =========================================================
+   MODAL FOOTER
+========================================================= */
+
+.modal-footer {
+  border-top: 1px solid #eceef2;
+
+  padding-top: 18px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  color: #a0a4af;
+
+  font-size: 9px;
+}
+
+.modal-done-button {
+  border: none;
+
+  background: #4f46e5;
+
+  color: white;
+
+  padding: 9px 17px;
+
+  border-radius: 8px;
+
+  font-size: 10px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.modal-done-button:hover {
+  background: #4338ca;
+
+  transform:
+    translateY(-1px);
+}
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes fadeUp {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalUp {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(15px)
+      scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@keyframes spin {
+
+  to {
+    transform:
+      rotate(360deg);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  .stats-grid {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .overview-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .deadline-list {
+    grid-template-columns:
+      1fr;
+  }
+}
+
+@media (max-width: 700px) {
+
+  .topbar-inner {
+    padding: 0 18px;
+  }
+
+  .user-info {
+    display: none;
+  }
+
+  .main-content {
+    padding: 32px 18px 60px;
+  }
+
+  .welcome-section {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 17px;
+  }
+
+  .welcome-section h1 {
+    font-size: 29px;
+  }
+
+  .stats-grid {
+    grid-template-columns:
+      1fr 1fr;
+  }
+
+  .stat-card {
+    padding: 15px;
+  }
+
+  .stat-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .stat-content strong {
+    font-size: 22px;
+  }
+
+  .email-row {
+    grid-template-columns:
+      38px 1fr 20px;
+
+    gap: 11px;
+  }
+
+  .email-action {
+    display: none;
+  }
+
+  .email-summary {
+    max-width: 100%;
+  }
+
+  .priority-content {
+    gap: 25px;
+  }
+
+  .priority-chart {
+    width: 110px;
+    height: 110px;
+  }
+
+  .priority-chart-inner {
+    width: 78px;
+    height: 78px;
+  }
+
+  .deadline-card {
+    align-items: flex-start;
+
+    flex-wrap: wrap;
+  }
+
+  .deadline-time {
+    width: 100%;
+
+    min-width: 0;
+  }
+
+  .deadline-original,
+  .deadline-exact {
+    white-space: normal;
+  }
+
+  .email-modal {
+    padding: 22px;
+
+    max-height: 92vh;
+  }
+}
