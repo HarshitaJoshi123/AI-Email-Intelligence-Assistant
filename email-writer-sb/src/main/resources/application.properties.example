@@ -16,7 +16,12 @@ spring.datasource.url=YOUR_DATABASE_URL
 spring.datasource.username=YOUR_POSTGRES_USERNAME
 spring.datasource.password=YOUR_POSTGRES_PASSWORD
 
-spring.jpa.hibernate.ddl-auto=update
+# Flyway database migrations
+spring.flyway.enabled=true
+spring.flyway.locations=classpath:db/migration
+
+# Flyway owns the schema
+spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 
