@@ -54,6 +54,16 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- Database migrations -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+
 		<!-- Twilio Java SDK -->
 		<dependency>
 			<groupId>com.twilio.sdk</groupId>
