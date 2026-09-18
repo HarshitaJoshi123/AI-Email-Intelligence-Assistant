@@ -2,6 +2,63 @@
 console.log("MailMind compact analysis UI v1.1.0 loaded");
 
 
+// Single source of truth for the backend URL, so it only
+// needs to change in one place if it's ever moved.
+const BACKEND_BASE_URL = 'http://localhost:8080';
+
+// How long to wait for the backend before giving up.
+const REQUEST_TIMEOUT_MS = 30000;
+
+
+// Wraps fetch() with an AbortController-based timeout so a
+// slow/unreachable backend can't leave a button stuck loading.
+async function fetchWithTimeout(url, options, timeoutMs) {
+
+    const controller = new AbortController();
+
+    const timeoutId = setTimeout(
+        () => controller.abort(),
+        timeoutMs
+    );
+
+    try {
+
+        return await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+
+    } finally {
+
+        clearTimeout(timeoutId);
+    }
+}
+
+
+// Turns technical errors into a clear, user-friendly message
+// without exposing internal details to the user.
+function getFriendlyErrorMessage(error) {
+
+    if (error && error.name === 'AbortError') {
+        return 'The request took too long to respond. Please try again.';
+    }
+
+    if (error instanceof TypeError) {
+        return 'Could not reach the MailMind backend. Please make sure it is running.';
+    }
+
+    if (error && error.code === 'EMPTY_RESPONSE') {
+        return 'MailMind did not return a valid response. Please try again.';
+    }
+
+    if (error && error.code === 'BACKEND_ERROR') {
+        return 'MailMind could not process this email right now. Please try again shortly.';
+    }
+
+    return 'Something went wrong. Please try again.';
+}
+
+
 // STEP 2: Create the AI Reply button
 function createAIButton() {
 
@@ -55,33 +112,56 @@ function createAnalyzeButton() {
 // STEP 3: Find and get the email content from Gmail
 function getEmailContent() {
 
-    // Gmail can use different HTML elements for email content
+    // Gmail can use different HTML elements for email content.
+    // [role="presentation"] was removed because Gmail applies it
+    // to many layout elements, not just message bodies.
     const selectors = [
         '.h7',
         '.a3s.aiL',
-        '.gmail_quote',
-        '[role="presentation"]'
+        '.gmail_quote'
     ];
 
     // Try each selector one by one
     for (const selector of selectors) {
 
-        // Find an element using the current selector
-        const content = document.querySelector(selector);
+        // Gmail can render several messages in a thread at once,
+        // so check every match for this selector.
+        const matches = document.querySelectorAll(selector);
 
-        // If we find the email content, return it
-        if (content) {
-            return content.innerText.trim();
+        // Gmail lists thread messages oldest to newest, so walk
+        // backwards: the last *visible* match is the message that
+        // is currently open / being replied to, not just whichever
+        // element happens to appear first in the document.
+        for (let i = matches.length - 1; i >= 0; i--) {
+
+            const element = matches[i];
+
+            // Skip elements that are hidden/collapsed in the DOM
+            const isVisible = element.offsetParent !== null;
+
+            if (!isVisible) {
+                continue;
+            }
+
+            const text = element.innerText.trim();
+
+            if (text) {
+                return text;
+            }
         }
     }
 
-    // If no selector finds the email, return an empty string
+    // If no selector finds visible email content, return an empty string
     return '';
 }
 
 
 // STEP 4: Find Gmail's compose toolbar
-function findComposeToolbar() {
+function findComposeToolbar(scope) {
+
+    // Default to the whole document when no specific compose
+    // window is known (keeps this function safe to call directly).
+    const searchRoot = scope || document;
 
     // Gmail can use different elements for the compose toolbar
     const selectors = [
@@ -94,8 +174,9 @@ function findComposeToolbar() {
     // Try each selector one by one
     for (const selector of selectors) {
 
-        // Find the toolbar using the current selector
-        const toolbar = document.querySelector(selector);
+        // Find the toolbar using the current selector, scoped to
+        // the relevant compose window when one is provided
+        const toolbar = searchRoot.querySelector(selector);
 
         // If toolbar is found, return it
         if (toolbar) {
@@ -129,9 +210,11 @@ function truncateText(value, maxLength) {
 
 
 // Compact Gmail result: status, priority, deadline, action + dashboard link
-function createAnalysisBox(analysis) {
+function createAnalysisBox(analysis, scope) {
 
-    const oldBox = document.querySelector('.ai-analysis-box');
+    const searchRoot = scope || document;
+
+    const oldBox = searchRoot.querySelector('.ai-analysis-box');
 
     if (oldBox) {
         oldBox.remove();
@@ -229,10 +312,10 @@ function createAnalysisBox(analysis) {
 
 
 // NEW: Show the analysis box inside Gmail
-function showAnalysisBox(analysis) {
+function showAnalysisBox(analysis, scope) {
 
-    // Find the Gmail compose toolbar
-    const toolbar = findComposeToolbar();
+    // Find the Gmail compose toolbar for this specific compose window
+    const toolbar = findComposeToolbar(scope);
 
     // If toolbar is not found, stop here
     if (!toolbar) {
@@ -241,7 +324,7 @@ function showAnalysisBox(analysis) {
     }
 
     // Create the analysis box
-    const box = createAnalysisBox(analysis);
+    const box = createAnalysisBox(analysis, scope);
 
     // Add the analysis box before the toolbar
     toolbar.parentElement.insertBefore(box, toolbar);
@@ -249,10 +332,15 @@ function showAnalysisBox(analysis) {
 
 
 // STEP 5: Add the AI button to Gmail
-function injectButton() {
+function injectButton(scope) {
 
-    // Check whether our AI button already exists
-    const existingButton = document.querySelector('.ai-reply-button');
+    // Default to the whole document when no specific compose
+    // window is known (keeps this function safe to call directly).
+    const searchRoot = scope || document;
+
+    // Check whether our AI button already exists in this
+    // specific compose window
+    const existingButton = searchRoot.querySelector('.ai-reply-button');
 
     // Remove the old button to prevent duplicate buttons
     if (existingButton) {
@@ -260,15 +348,15 @@ function injectButton() {
     }
 
     // Remove old analyze button to prevent duplicate buttons
-    const existingAnalyzeButton = document.querySelector('.ai-analyze-button');
+    const existingAnalyzeButton = searchRoot.querySelector('.ai-analyze-button');
 
     if (existingAnalyzeButton) {
         existingAnalyzeButton.remove();
     }
 
 
-    // Find Gmail's compose toolbar
-    const toolbar = findComposeToolbar();
+    // Find Gmail's compose toolbar for this compose window
+    const toolbar = findComposeToolbar(searchRoot);
 
     // If toolbar is not found, stop here
     if (!toolbar) {
@@ -285,26 +373,40 @@ function injectButton() {
     // Add our own class to identify the button
     button.classList.add('ai-reply-button');
 
+    // Tracks whether a Reply request is already in progress for
+    // this button, since setting .disabled on a <div> has no
+    // effect and would otherwise allow duplicate clicks.
+    let isReplyInProgress = false;
+
 
     // STEP 6: Decide what happens when AI Reply is clicked
     button.addEventListener('click', async () => {
+
+        if (isReplyInProgress) {
+            return;
+        }
+
+        isReplyInProgress = true;
 
         try {
 
             // Show that AI is generating the reply
             button.innerHTML = 'Generating...';
 
-            // Disable the button while request is running
-            button.disabled = true;
-
 
             // STEP 7: Get the email content from Gmail
             const emailContent = getEmailContent();
 
+            // Check if email content was found
+            if (!emailContent) {
+                alert('Could not find email content');
+                return;
+            }
+
 
             // STEP 8: Send the email to our Spring Boot backend
-            const response = await fetch(
-                'http://localhost:8080/api/email/generate',
+            const response = await fetchWithTimeout(
+                `${BACKEND_BASE_URL}/api/email/generate`,
                 {
                     // We are sending data using POST
                     method: 'POST',
@@ -319,22 +421,42 @@ function injectButton() {
                         emailContent: emailContent,
                         tone: "professional"
                     })
-                }
+                },
+                REQUEST_TIMEOUT_MS
             );
 
 
             // STEP 9: Check if the backend request was successful
             if (!response.ok) {
-                throw new Error('API Request Failed');
+
+                const errorText = await response.text().catch(() => '');
+
+                console.error(
+                    'Reply API Error:',
+                    response.status,
+                    errorText
+                );
+
+                const requestError = new Error('Backend returned an error');
+                requestError.code = 'BACKEND_ERROR';
+                throw requestError;
             }
 
 
             // STEP 10: Get the AI-generated reply from the backend
             const generatedReply = await response.text();
 
+            if (!generatedReply || !generatedReply.trim()) {
 
-            // STEP 11: Find Gmail's reply/compose text box
-            const composeBox = document.querySelector(
+                const emptyResponseError = new Error('Empty response from server');
+                emptyResponseError.code = 'EMPTY_RESPONSE';
+                throw emptyResponseError;
+            }
+
+
+            // STEP 11: Find Gmail's reply/compose text box for
+            // this specific compose window
+            const composeBox = searchRoot.querySelector(
                 '[role="textbox"][g_editable="true"]'
             );
 
@@ -364,16 +486,15 @@ function injectButton() {
             // STEP 13: Handle any error
             console.error(error);
 
-            // Show an error message to the user
-            alert('Failed to generate reply');
+            // Show a clear, user-friendly error message
+            alert(getFriendlyErrorMessage(error));
 
         } finally {
 
             // STEP 14: Reset the button after the request finishes
             button.innerHTML = 'AI Reply';
 
-            // Enable the button again
-            button.disabled = false;
+            isReplyInProgress = false;
         }
     });
 
@@ -384,17 +505,24 @@ function injectButton() {
     // Add our own class to identify the button
     analyzeButton.classList.add('ai-analyze-button');
 
+    // Tracks whether an Analyze request is already in progress
+    // for this button, for the same reason as isReplyInProgress.
+    let isAnalyzeInProgress = false;
+
 
     // NEW: Decide what happens when AI Analyze is clicked
     analyzeButton.addEventListener('click', async () => {
+
+        if (isAnalyzeInProgress) {
+            return;
+        }
+
+        isAnalyzeInProgress = true;
 
         try {
 
             // Show that AI is analyzing the email
             analyzeButton.innerHTML = 'Analyzing...';
-
-            // Disable the button while request is running
-            analyzeButton.disabled = true;
 
 
             // Get the email content from Gmail
@@ -408,8 +536,8 @@ function injectButton() {
 
 
             // Send the email to our Spring Boot analysis endpoint
-            const response = await fetch(
-                'http://localhost:8080/api/email/analyze',
+            const response = await fetchWithTimeout(
+                `${BACKEND_BASE_URL}/api/email/analyze`,
                 {
                     // We are sending data using POST
                     method: 'POST',
@@ -424,7 +552,8 @@ function injectButton() {
                         emailContent: emailContent,
                         tone: "professional"
                     })
-                }
+                },
+                REQUEST_TIMEOUT_MS
             );
 
 
@@ -432,7 +561,7 @@ function injectButton() {
             if (!response.ok) {
 
                 // Get the error message from the backend
-                const errorText = await response.text();
+                const errorText = await response.text().catch(() => '');
 
                 // Show the actual error in the console
                 console.error(
@@ -441,17 +570,26 @@ function injectButton() {
                     errorText
                 );
 
-                throw new Error(
-                    `Analysis API Request Failed: ${response.status}`
-                );
+                const requestError = new Error('Backend returned an error');
+                requestError.code = 'BACKEND_ERROR';
+                throw requestError;
             }
 
 
             // Get the analysis response as JSON
             const analysis = await response.json();
 
-            // Show the analysis inside Gmail
-            showAnalysisBox(analysis);
+            // Make sure the backend actually returned a usable
+            // analysis object before trying to display it
+            if (!analysis || typeof analysis !== 'object') {
+
+                const emptyResponseError = new Error('Invalid response from server');
+                emptyResponseError.code = 'EMPTY_RESPONSE';
+                throw emptyResponseError;
+            }
+
+            // Show the analysis inside Gmail, in this compose window
+            showAnalysisBox(analysis, searchRoot);
 
 
         } catch (error) {
@@ -459,16 +597,15 @@ function injectButton() {
             // Handle any error
             console.error(error);
 
-            // Show an error message to the user
-            alert('Failed to analyze email');
+            // Show a clear, user-friendly error message
+            alert(getFriendlyErrorMessage(error));
 
         } finally {
 
             // Reset the button after the request finishes
             analyzeButton.innerHTML = 'AI Analyze';
 
-            // Enable the button again
-            analyzeButton.disabled = false;
+            isAnalyzeInProgress = false;
         }
     });
 
@@ -484,6 +621,14 @@ function injectButton() {
 // STEP 16: Watch Gmail for changes
 // Gmail creates compose windows dynamically,
 // so we need to detect when a new compose window appears.
+
+// Tracks compose containers that already have an injection
+// scheduled, so rapid repeated mutations for the same compose
+// window (common while Gmail animates it open) don't trigger
+// redundant work. injectButton() is idempotent on its own, but
+// this avoids doing the work multiple times in the first place.
+const scheduledContainers = new WeakSet();
+
 const observer = new MutationObserver((mutations) => {
 
     // Check every change detected on the Gmail page
@@ -492,26 +637,39 @@ const observer = new MutationObserver((mutations) => {
         // Get the elements that were newly added
         const addedNodes = Array.from(mutation.addedNodes);
 
+        for (const node of addedNodes) {
 
-        // Check whether a compose-related element was added
-        const hasComposeElements = addedNodes.some(node =>
-            node.nodeType === Node.ELEMENT_NODE &&
-            (
-                node.matches('.aDh, .btC, [role="dialog"]') ||
-                node.querySelector(
-                    '.aDh, .btC, [role="dialog"]'
-                )
+            if (node.nodeType !== Node.ELEMENT_NODE) {
+                continue;
+            }
+
+            // Identify the specific compose window that was
+            // added, so buttons can be attached to the correct
+            // one instead of always searching the whole document.
+            const composeContainer = node.matches(
+                '.aDh, .btC, [role="dialog"]'
             )
-        );
+                ? node
+                : node.querySelector('.aDh, .btC, [role="dialog"]');
 
+            if (!composeContainer) {
+                continue;
+            }
 
-        // If a compose window is detected
-        if (hasComposeElements) {
+            if (scheduledContainers.has(composeContainer)) {
+                continue;
+            }
+
+            scheduledContainers.add(composeContainer);
 
             console.log("Compose Window Detected");
 
-            // Wait 500ms and then add our AI button
-            setTimeout(injectButton, 500);
+            // Wait 500ms and then add our AI button to this
+            // specific compose window
+            setTimeout(() => {
+                scheduledContainers.delete(composeContainer);
+                injectButton(composeContainer);
+            }, 500);
         }
     }
 });

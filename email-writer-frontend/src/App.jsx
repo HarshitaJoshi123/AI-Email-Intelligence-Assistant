@@ -11,6 +11,7 @@ function App() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historySearch, setHistorySearch] = useState('');
   const [historyPriority, setHistoryPriority] = useState('ALL');
+  const [deadlinesOpen, setDeadlinesOpen] = useState(false);
 
   const API_URL = 'http://localhost:8080/api/email';
 
@@ -175,6 +176,50 @@ function App() {
   );
 
   // =========================================================
+  // AI STATUS SUMMARY
+  // (drives the topbar pill with real, useful information
+  // instead of a static "Active" label)
+  // =========================================================
+
+  const overdueCount = useMemo(() => {
+    return deadlineEmails.filter(
+      (email) => getDeadlineStatus(email).type === 'overdue'
+    ).length;
+  }, [deadlineEmails]);
+
+  const aiStatus = useMemo(() => {
+    if (totalEmails === 0) {
+      return {
+        type: 'idle',
+        label: 'Waiting for your first email'
+      };
+    }
+
+    if (overdueCount > 0) {
+      return {
+        type: 'alert',
+        label: `${overdueCount} overdue ${
+          overdueCount === 1 ? 'item needs' : 'items need'
+        } attention`
+      };
+    }
+
+    if (actionRequired > 0) {
+      return {
+        type: 'active',
+        label: `${actionRequired} action${
+          actionRequired === 1 ? '' : 's'
+        } pending review`
+      };
+    }
+
+    return {
+      type: 'clear',
+      label: 'All caught up — nothing pending'
+    };
+  }, [totalEmails, overdueCount, actionRequired]);
+
+  // =========================================================
   // HISTORY
   // =========================================================
 
@@ -227,6 +272,20 @@ function App() {
       .slice(0, 5);
   }, [analyses]);
 
+  const topCategoryInsight = useMemo(() => {
+    if (categoryData.length === 0) {
+      return null;
+    }
+
+    const [topCategory, topCount] = categoryData[0];
+    const share =
+      totalEmails === 0
+        ? 0
+        : Math.round((topCount / totalEmails) * 100);
+
+    return `${topCategory} is your busiest category — ${share}% of analyzed emails.`;
+  }, [categoryData, totalEmails]);
+
   // =========================================================
   // PRIORITY CHART
   // =========================================================
@@ -256,6 +315,17 @@ function App() {
       #22c55e ${mediumPercentage}% 100%
     )`
   };
+
+  const attentionPercentage = getPercentage(
+    highPriority + mediumPriority
+  );
+
+  const priorityInsight =
+    totalEmails === 0
+      ? null
+      : attentionPercentage >= 50
+      ? `${attentionPercentage}% of your inbox needs attention — prioritize High first.`
+      : `Only ${attentionPercentage}% needs attention. Inbox is largely under control.`;
 
   // =========================================================
   // ACTION STATUS
@@ -347,6 +417,15 @@ function App() {
     return 'low';
   };
 
+  // Allows email/history rows to be opened with Enter or Space,
+  // since they act as buttons but are laid out as divs.
+  const handleRowActivate = (event, email) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setSelectedEmail(email);
+    }
+  };
+
   // =========================================================
   // DATE FORMATTING
   // =========================================================
@@ -406,12 +485,40 @@ function App() {
 
           <div className="brand">
             <div className="brand-icon">
-              M
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 7C3 5.89543 3.89543 5 5 5H19C20.1046 5 21 5.89543 21 7V17C21 18.1046 20.1046 19 19 19H5C3.89543 19 3 18.1046 3 17V7Z"
+                  stroke="white"
+                  strokeWidth="1.6"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M4 7L12 13L20 7"
+                  stroke="white"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle
+                  cx="18.5"
+                  cy="6.5"
+                  r="3"
+                  fill="#A5B4FC"
+                  stroke="white"
+                  strokeWidth="0.9"
+                />
+              </svg>
             </div>
 
             <div>
               <div className="brand-name">
-                MailMind
+                Mail<span className="brand-name-accent">Mind</span>
               </div>
 
               <div className="brand-tagline">
@@ -423,7 +530,9 @@ function App() {
           <div className="topbar-right">
 
             <button
-              className="refresh-button"
+              className={`refresh-button ${
+                loading ? 'spinning' : ''
+              }`}
               onClick={fetchAnalyses}
               title="Refresh"
             >
@@ -476,9 +585,9 @@ function App() {
             </p>
           </div>
 
-          <div className="live-status">
+          <div className={`live-status ${aiStatus.type}`}>
             <span className="status-dot"></span>
-            AI Intelligence Active
+            {aiStatus.label}
           </div>
 
         </section>
@@ -669,6 +778,15 @@ function App() {
 
                 </div>
 
+                {topCategoryInsight && (
+
+                  <div className="panel-insight">
+                    <span className="panel-insight-icon">✦</span>
+                    {topCategoryInsight}
+                  </div>
+
+                )}
+
                 {categoryData.length === 0 ? (
 
                   <div className="empty-small">
@@ -753,6 +871,15 @@ function App() {
                   </div>
 
                 </div>
+
+                {priorityInsight && (
+
+                  <div className="panel-insight">
+                    <span className="panel-insight-icon">✦</span>
+                    {priorityInsight}
+                  </div>
+
+                )}
 
                 <div className="priority-content">
 
@@ -912,6 +1039,11 @@ function App() {
                         onClick={() =>
                           setSelectedEmail(email)
                         }
+                        onKeyDown={(event) =>
+                          handleRowActivate(event, email)
+                        }
+                        role="button"
+                        tabIndex={0}
                       >
 
                         <div className="email-avatar">
@@ -1065,7 +1197,7 @@ function App() {
                     <button
                       className="view-all-button"
                       onClick={() =>
-                        setHistoryOpen(true)
+                        setDeadlinesOpen(true)
                       }
                     >
                       View all →
@@ -1089,11 +1221,13 @@ function App() {
                     return (
 
                       <div
-                        className="deadline-card"
+                        className={`deadline-card deadline-card-${deadlineStatus.type}`}
                         key={email.id}
                       >
 
-                        <div className="deadline-icon">
+                        <div
+                          className={`deadline-icon deadline-icon-${deadlineStatus.type}`}
+                        >
                           ◷
                         </div>
 
@@ -1323,6 +1457,18 @@ function App() {
                         setHistoryOpen(false);
                         setSelectedEmail(email);
                       }}
+                      onKeyDown={(event) => {
+                        if (
+                          event.key === 'Enter' ||
+                          event.key === ' '
+                        ) {
+                          event.preventDefault();
+                          setHistoryOpen(false);
+                          setSelectedEmail(email);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
                     >
 
                       <span className="history-avatar">
@@ -1426,6 +1572,210 @@ function App() {
                   );
 
                 })
+
+              )}
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
+
+      {/* =====================================================
+          ALL DEADLINES
+      ===================================================== */}
+
+      {deadlinesOpen && (
+
+        <div
+          className="modal-overlay"
+          onClick={() =>
+            setDeadlinesOpen(false)
+          }
+        >
+
+          <div
+            className="history-modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+
+            <div className="history-header">
+
+              <div>
+
+                <span className="modal-label">
+                  ACTION TRACKER
+                </span>
+
+                <h2>
+                  All Deadlines
+                </h2>
+
+                <p>
+                  Every pending email with a
+                  deadline, soonest first.
+                </p>
+
+              </div>
+
+              <button
+                className="close-button"
+                onClick={() =>
+                  setDeadlinesOpen(false)
+                }
+              >
+                ×
+              </button>
+
+            </div>
+
+            <div
+              className="history-list"
+              style={{ padding: '16px' }}
+            >
+
+              {deadlineEmails.length === 0 ? (
+
+                <div className="history-empty">
+                  No pending deadlines.
+                </div>
+
+              ) : (
+
+                <div className="deadline-list">
+
+                  {deadlineEmails.map((email) => {
+
+                    const deadlineStatus =
+                      getDeadlineStatus(email);
+
+                    const completed =
+                      completedActions[email.id] ||
+                      false;
+
+                    return (
+
+                      <div
+                        className={`deadline-card deadline-card-${deadlineStatus.type}`}
+                        key={email.id}
+                        onClick={() => {
+                          setDeadlinesOpen(false);
+                          setSelectedEmail(email);
+                        }}
+                        onKeyDown={(event) => {
+                          if (
+                            event.key === 'Enter' ||
+                            event.key === ' '
+                          ) {
+                            event.preventDefault();
+                            setDeadlinesOpen(false);
+                            setSelectedEmail(email);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        style={{ cursor: 'pointer' }}
+                      >
+
+                        <div
+                          className={`deadline-icon deadline-icon-${deadlineStatus.type}`}
+                        >
+                          ◷
+                        </div>
+
+                        <div className="deadline-info">
+
+                          <strong>
+                            {email.action ||
+                              'Review this email'}
+                          </strong>
+
+                          <span>
+                            {email.category} ·{' '}
+                            {email.priority} priority
+                          </span>
+
+                        </div>
+
+                        <div
+                          className={`deadline-time deadline-${deadlineStatus.type}`}
+                        >
+
+                          <span className="deadline-status">
+                            {deadlineStatus.label}
+                          </span>
+
+                          <strong className="deadline-original">
+                            {email.deadline}
+                          </strong>
+
+                          <small className="deadline-exact">
+                            {formatDeadlineDateTime(
+                              email.deadlineAt
+                            )}
+                          </small>
+
+                        </div>
+
+                        {/* MARK DEADLINE TASK AS DONE */}
+
+                        <div
+                          className="deadline-action"
+                          onClick={(event) =>
+                            event.stopPropagation()
+                          }
+                        >
+
+                          <label
+                            className={`action-check ${
+                              completed
+                                ? 'done'
+                                : ''
+                            }`}
+                            title={
+                              completed
+                                ? 'Mark as pending'
+                                : 'Mark as done'
+                            }
+                          >
+
+                            <input
+                              type="checkbox"
+                              checked={completed}
+                              onChange={() =>
+                                toggleAction(
+                                  email.id
+                                )
+                              }
+                            />
+
+                            <span className="custom-checkbox">
+                              {completed
+                                ? '✓'
+                                : ''}
+                            </span>
+
+                            <span className="action-label">
+                              {completed
+                                ? 'Completed'
+                                : 'Mark done'}
+                            </span>
+
+                          </label>
+
+                        </div>
+
+                      </div>
+
+                    );
+
+                  })}
+
+                </div>
 
               )}
 

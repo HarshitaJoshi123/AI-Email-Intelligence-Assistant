@@ -51,15 +51,39 @@ public class EmailGeneratorService {
         // Build prompt
         String prompt = buildPrompt(emailRequest);
 
-        // Prepare JSON request body
-        String requestBody = String.format("""
-                {
-                  "contents": [{
-                    "parts": [{
-                      "text": "%s"
-                    }]
-                  }]
-                }""", prompt);
+        // ObjectMapper converts Java objects to JSON safely,
+        // correctly escaping quotes, backslashes, and newlines
+        // in the prompt (same approach as generateEmailAnalysis).
+        ObjectMapper mapper = new ObjectMapper();
+
+        String requestBody;
+
+        try {
+
+            requestBody = mapper.writeValueAsString(
+                    java.util.Map.of(
+                            "contents",
+                            java.util.List.of(
+                                    java.util.Map.of(
+                                            "parts",
+                                            java.util.List.of(
+                                                    java.util.Map.of(
+                                                            "text",
+                                                            prompt
+                                                    )
+                                            )
+                                    )
+                            )
+                    )
+            );
+
+        } catch (Exception e) {
+
+            throw new RuntimeException(
+                    "Error creating request body: "
+                            + e.getMessage()
+            );
+        }
 
         // Send request to Gemini
         String response = webClient.post()
