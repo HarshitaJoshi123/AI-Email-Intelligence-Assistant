@@ -13,7 +13,7 @@ function App() {
   const [historyPriority, setHistoryPriority] = useState('ALL');
   const [deadlinesOpen, setDeadlinesOpen] = useState(false);
 
-  const API_URL = 'http://localhost:8080/api/email';
+  const API_URL = 'https://mailmind-backend-hr9p.onrender.com/api/email';
 
   // =========================================================
   // FETCH ANALYSES
