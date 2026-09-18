@@ -5,7 +5,7 @@
     "manifest_version": 3,
     "permissions": ["activeTab", "storage"],
     "host_permissions": [
-        "http://localhost:8080/*",
+        "https://mailmind-backend-hr9p.onrender.com/*",
         "*://mail.google.com/*"
     ],
     "content_scripts": [
