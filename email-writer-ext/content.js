@@ -4,7 +4,7 @@ console.log("MailMind compact analysis UI v1.1.0 loaded");
 
 // Single source of truth for the backend URL, so it only
 // needs to change in one place if it's ever moved.
-const BACKEND_BASE_URL = 'http://localhost:8080';
+const BACKEND_BASE_URL = 'https://mailmind-backend-hr9p.onrender.com';
 
 // How long to wait for the backend before giving up.
 const REQUEST_TIMEOUT_MS = 30000;
