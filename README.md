@@ -2,72 +2,103 @@
 
 **AI-Driven Email Intelligence & Action Management Platform**
 
-## 📖 Project Description
+![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?style=flat&logo=spring-boot&logoColor=white)
+![Gemini AI](https://img.shields.io/badge/Gemini%20AI-EA4335?style=flat&logo=google&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white)
 
-Modern professionals are drowning in email. The average knowledge worker receives 50-100+ emails daily, spending 28% of their workday managing messages. Yet current email systems offer no intelligence—just filters and folders. Critical deadlines hide in lengthy emails, important action items go unnoticed, and users waste hours manually sorting through clutter to identify what truly matters.
+## Overview
 
-**MailMind** solves this fundamental problem with an intelligent email analysis platform. Instead of forcing users to manually categorize and prioritize, MailMind uses cutting-edge **Generative AI** to instantly transform unstructured email chaos into actionable intelligence.
+Modern professionals are drowning in email. According to McKinsey Global Institute, knowledge workers spend about 28% of their workweek on email, yet current email systems offer little intelligence beyond filters and folders. Critical deadlines hide in lengthy emails, important action items go unnoticed, and users spend hours manually sorting through clutter to identify what truly matters.
+
+**MailMind** solves this with an intelligent email analysis platform. Instead of forcing users to manually categorize and prioritize, MailMind uses Generative AI to transform unstructured emails into actionable intelligence, seamlessly integrated into Gmail via Chrome Extension.
 
 When a user receives an email, MailMind's AI automatically:
 
-1. **Analyzes the email** to understand its core meaning, intent, and context
-2. **Extracts key information** including required actions, deadlines, and priority levels
+1. **Analyzes** the email to understand its core meaning, intent, and context
+2. **Extracts** key information, including required actions, deadlines, and priority levels
 3. **Identifies patterns** to detect duplicates and recurring issues
-4. **Generates intelligent replies** that match the tone and context of the original message
-5. **Routes to the dashboard** where all insights are unified and trackable
+4. **Generates replies** that match the tone and context of the original message
+5. **Routes to the dashboard**, where all insights are unified and trackable
 
-Beyond simple categorization, MailMind integrates an **AI-Powered Insights Module** that analyzes email patterns over time. This helps users understand their communication workload, identify bottlenecks, track action item completion rates, and receive alerts about critical deadlines—all from a single, unified dashboard.
+Beyond simple categorization, MailMind includes an AI-Powered Insights Module that analyzes email patterns over time. This helps users understand their communication workload, identify bottlenecks, track action item completion rates, and receive alerts about critical deadlines, all from a single dashboard.
 
-The system seamlessly integrates with Gmail via a **Chrome Extension**, requiring zero workflow changes. Users see the intelligence directly in their inbox, with the ability to generate replies, track actions, and receive smart notifications.
+The system integrates with Gmail via a Chrome Extension, requiring no change to the user's existing workflow. Users see the intelligence directly in their inbox, and can generate replies, track actions, and receive smart notifications on Telegram.
 
-## ✨ Key Features
+## Key Features
 
-- **🤖 Intelligent Email Analysis:** Gemini AI instantly understands email content, context, and sentiment
-- **📝 Auto-Summarization:** Generates concise summaries of even the longest emails in seconds
-- **🏷️ Smart Categorization:** Automatically classifies emails by type, importance, and context
-- **🚨 Priority Detection:** Identifies urgent emails and marks them automatically
-- **✅ Action Extraction:** Detects required actions and next steps from email text
-- **📅 Deadline Intelligence:** Automatically extracts, parses, and tracks deadlines
-- **💬 AI Reply Generation:** Creates contextual, tone-matched replies in multiple styles
-- **📊 Unified Dashboard:** View, track, and manage all email intelligence in one place
-- **✔️ Action Tracking:** Monitor completion of extracted tasks and action items
-- **📱 Smart Notifications:** Receive WhatsApp alerts for high-priority emails and upcoming deadlines
-- **🔒 Enterprise Security:** End-to-end secure processing with encrypted data transmission
-- **⚡ Zero Friction:** Integrates directly into Gmail—no app switching required
+- 🤖 **Intelligent Email Analysis** – Gemini AI understands email content, intent, and context
+- 📝 **Auto-Summarization** – Condense lengthy emails into concise summaries instantly
+- 🏷️ **Smart Categorization** – Automatically classify emails by type and importance
+- 🚨 **Priority Detection** – Identify and flag urgent emails automatically
+- ✅ **Action Extraction** – Surface required actions and next steps from email text
+- 📅 **Deadline Intelligence** – Automatically detect and track email deadlines
+- 💬 **AI Reply Generation** – Generate contextual, tone-matched email replies
+- 📊 **Unified Dashboard** – View and manage all email intelligence in one place
+- ✔️ **Action Tracking** – Monitor completion of extracted tasks and items
+- 📱 **Smart Notifications** – Receive Telegram alerts for priority emails and deadlines
+- 🔌 **Chrome Extension** – Zero-friction Gmail integration—no app switching
 
-## 🛠️ Technical Architecture & Stack
+## How It Works
 
-The platform is built using a modern, scalable microservices architecture, separating the core backend operations from heavy AI inference tasks.
+The system follows a clean request-response flow:
 
-- **Frontend:** React.js (Interactive analytics dashboard)
-- **Backend Core:** Java, Spring Boot (REST APIs, routing, webhook handling)
-- **Database:** PostgreSQL (Email intelligence storage, action tracking)
-- **AI Microservices:** Google Gemini AI (Email analysis, categorization, synthesis)
-- **Machine Learning:** NLP Models (Sentiment analysis, deadline extraction, action detection)
-- **Browser Extension:** Chrome Extension APIs (Seamless Gmail integration)
-- **DevOps:** Git (Version control and deployment workflows)
+```
+Gmail Inbox
+    ↓
+Chrome Extension (Captures Email)
+    ↓
+Spring Boot Backend (API Layer)
+    ↓
+Gemini AI (Analysis & Generation)
+    ↓
+PostgreSQL (Storage & Tracking)
+    ↓
+Dashboard & Telegram Notifications
+```
 
-## 🎯 Impact
+When you receive an email, the Chrome Extension captures it and sends it to the backend. The Gemini AI model analyzes the content, extracts insights (summary, priority, actions, deadlines), and returns results to the dashboard. You can generate replies, track actions, and receive Telegram notifications—all from one unified interface.
 
-MailMind transforms how professionals interact with email:
+## Tech Stack
 
-- **Save 8+ hours per week** on email management and prioritization
-- **Never miss a deadline** with automatic deadline extraction and tracking
-- **Reduce decision fatigue** with AI-powered priority assessment
-- **Improve response quality** with intelligent reply suggestions
-- **Increase productivity** by eliminating manual email categorization
-- **Enhance team coordination** through shared action item visibility
-- **Data-driven insights** about communication patterns and bottlenecks
+- **Frontend:** React.js, Vite, CSS — Used to build the interactive dashboard and user interface.
+- **Backend:** Java, Spring Boot, REST APIs, Maven — Used to build the backend services and API layer.
+- **Database:** PostgreSQL, Flyway — Used for storing email analysis data and managing database migrations.
+- **AI & Integrations:** Google Gemini AI, Telegram — Gemini AI powers email analysis and reply generation, while Telegram is used for notifications.
+- **Chrome Extension:** JavaScript, Chrome Extension APIs, Manifest V3 — Used to integrate MailMind directly with Gmail.
 
-By automating the cognitive load of email management, MailMind frees professionals to focus on high-value work while ensuring nothing important falls through the cracks.
+## Project Structure
 
+```
+AI-Email-Intelligence-Assistant/
+│
+├── email-writer-frontend/
+│   └── React.js application for the analytics dashboard
+│       (View, track, and manage email intelligence)
+│
+├── email-writer-sb/
+│   └── Spring Boot backend service
+│       (REST APIs, email processing, Gemini AI integration)
+│
+└── email-writer-ext/
+    └── Chrome Extension
+        (Seamless Gmail integration, email capture)
+```
 
-## 🌟 Vision
+## Impact
+
+- 💡 **Save Time** – Reclaim 8+ hours per week from email management and prioritization
+- ✨ **Never Miss Deadlines** – Automatic deadline extraction and intelligent tracking
+- 🎯 **Reduce Decision Fatigue** – AI-powered priority assessment eliminates manual sorting
+- 📈 **Improve Response Quality** – Intelligent reply suggestions enhance email effectiveness
+- 🚀 **Boost Productivity** – Eliminate manual email categorization and focus on meaningful work
+- 🤝 **Better Coordination** – Shared action item visibility across email threads
+- 📊 **Data-Driven Insights** – Understand communication patterns, bottlenecks, and workload trends
+
+## Vision
 
 **To eliminate email management as a productivity bottleneck.**
 
-In a world of information overload, MailMind believes that intelligent systems should handle the complexity of email organization, allowing humans to focus on meaningful work. By combining cutting-edge AI with thoughtful design, MailMind makes email management effortless and intelligent.
-
----
+In a world of information overload, MailMind believes intelligent systems should handle the complexity of email organization, allowing professionals to focus on high-impact work. By combining cutting-edge AI with thoughtful design, MailMind transforms email from a burden into a streamlined, intelligent workflow.
 
 **Reclaim your inbox. Reclaim your time. With MailMind.**
