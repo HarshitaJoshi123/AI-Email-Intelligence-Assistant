@@ -7,7 +7,7 @@ console.log("MailMind compact analysis UI v1.1.0 loaded");
 const BACKEND_BASE_URL = 'https://mailmind-backend-hr9p.onrender.com';
 
 // How long to wait for the backend before giving up.
-const REQUEST_TIMEOUT_MS = 30000;
+const REQUEST_TIMEOUT_MS = 120000;
 
 
 // Wraps fetch() with an AbortController-based timeout so a
