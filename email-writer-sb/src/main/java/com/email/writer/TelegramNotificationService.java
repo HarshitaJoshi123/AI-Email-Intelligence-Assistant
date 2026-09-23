@@ -8,29 +8,45 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
 
+/*
+ * Telegram destination is now per-user: the bot token is shared
+ * (one bot), but the chat id a message is sent to comes from
+ * whichever User the notification belongs to, via
+ * user.getTelegramChatId(). This replaced a single hardcoded
+ * telegram.chat.id that sent every user's reminders to one chat.
+ */
 @Service
 public class TelegramNotificationService {
 
     private final WebClient webClient;
     private final String botToken;
-    private final String chatId;
 
     public TelegramNotificationService(
-            @Value("${telegram.bot.token:}") String botToken,
-            @Value("${telegram.chat.id:}") String chatId) {
+            @Value("${telegram.bot.token:}") String botToken) {
 
         this.botToken = botToken == null ? "" : botToken.trim();
-        this.chatId = chatId == null ? "" : chatId.trim();
         this.webClient = WebClient.builder()
                 .baseUrl("https://api.telegram.org")
                 .build();
     }
 
-    public boolean isConfigured() {
-        return !botToken.isEmpty() && !chatId.isEmpty();
+    // Bot-level readiness only (is a bot token configured at all).
+    // Whether a given user should receive a message is a separate,
+    // per-user check -> see isConfiguredForUser(User).
+    public boolean isBotConfigured() {
+        return !botToken.isEmpty();
+    }
+
+    public boolean isConfiguredForUser(User user) {
+        return isBotConfigured()
+                && user != null
+                && user.isTelegramNotificationsEnabled()
+                && user.getTelegramChatId() != null
+                && !user.getTelegramChatId().isBlank();
     }
 
     public void sendMailMindAlert(
+            String chatId,
             String priority,
             String action,
             String deadline) {
@@ -51,6 +67,7 @@ public class TelegramNotificationService {
                         : deadline.trim();
 
         sendMessage(
+                chatId,
                 "MailMind Alert\n\n"
                         + "Priority: " + safePriority + "\n\n"
                         + "Action: " + safeAction + "\n\n"
@@ -59,6 +76,7 @@ public class TelegramNotificationService {
     }
 
     public void sendDeadlineReminder(
+            String chatId,
             EmailAnalysisEntity email,
             String headline,
             String formattedDeadline) {
@@ -86,19 +104,25 @@ public class TelegramNotificationService {
 
         message.append("Deadline: ").append(formattedDeadline);
 
-        sendMessage(message.toString());
+        sendMessage(chatId, message.toString());
     }
 
-    public String sendMessage(String text) {
+    public String sendMessage(String chatId, String text) {
 
-        if (!isConfigured()) {
+        if (!isBotConfigured()) {
             throw new IllegalStateException(
-                    "Telegram is not configured. Set telegram.bot.token and telegram.chat.id."
+                    "Telegram is not configured. Set telegram.bot.token."
+            );
+        }
+
+        if (chatId == null || chatId.isBlank()) {
+            throw new IllegalStateException(
+                    "No Telegram chat id provided for this user."
             );
         }
 
         Map<String, Object> body = Map.of(
-                "chat_id", chatId,
+                "chat_id", chatId.trim(),
                 "text", text
         );
 

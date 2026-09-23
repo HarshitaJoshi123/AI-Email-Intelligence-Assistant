@@ -2,6 +2,7 @@ package com.email.writer;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -29,10 +30,20 @@ public class DeadlineReminderScheduler {
         this.telegramNotificationService = telegramNotificationService;
     }
 
+    /*
+     * @Transactional keeps one Hibernate session open for the whole
+     * sweep, so lazily-loaded associations (email.getUser() on the
+     * "latest" re-fetch below) can still be read without a
+     * LazyInitializationException.
+     */
     @Scheduled(cron = "0 * * * * *", zone = "Asia/Kolkata")
+    @Transactional
     public void sendDueDeadlineReminders() {
 
-        if (!telegramNotificationService.isConfigured()) {
+        // Bot-level gate only. Per-user opt-in/chat id is checked
+        // per email below, and findPendingWithDeadline() already
+        // filters to users with notifications enabled.
+        if (!telegramNotificationService.isBotConfigured()) {
             return;
         }
 
@@ -49,6 +60,14 @@ public class DeadlineReminderScheduler {
     private void processEmail(
             EmailAnalysisEntity email,
             LocalDateTime now) {
+
+        User user = email.getUser();
+
+        // No owning user, or that user hasn't connected/enabled
+        // Telegram -> nothing to send this email to.
+        if (!telegramNotificationService.isConfiguredForUser(user)) {
+            return;
+        }
 
         LocalDateTime deadlineAt = email.getDeadlineAt();
 
@@ -71,6 +90,7 @@ public class DeadlineReminderScheduler {
 
             sendAndMark(
                     email,
+                    user.getTelegramChatId(),
                     true,
                     "🔔 MailMind Reminder\n\nYour deadline is in 1 hour.",
                     deadlineAt
@@ -92,6 +112,7 @@ public class DeadlineReminderScheduler {
 
             sendAndMark(
                     latest,
+                    user.getTelegramChatId(),
                     false,
                     "🚨 MailMind Reminder\n\nYour deadline is in 10 minutes!",
                     deadlineAt
@@ -112,12 +133,14 @@ public class DeadlineReminderScheduler {
 
     private void sendAndMark(
             EmailAnalysisEntity email,
+            String chatId,
             boolean oneHourReminder,
             String headline,
             LocalDateTime deadlineAt) {
 
         try {
             telegramNotificationService.sendDeadlineReminder(
+                    chatId,
                     email,
                     headline,
                     deadlineAt.format(DEADLINE_FORMAT)

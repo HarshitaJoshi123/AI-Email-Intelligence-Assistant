@@ -27,6 +27,7 @@ public class GlobalExceptionHandler {
         System.out.println(
                 "Unhandled exception: " + exception
         );
+        exception.printStackTrace();
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());

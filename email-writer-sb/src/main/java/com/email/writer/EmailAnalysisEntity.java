@@ -14,6 +14,11 @@ public class EmailAnalysisEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // User who owns this email analysis
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     // Original email content
     @Column(columnDefinition = "TEXT")
     private String emailContent;

@@ -29,9 +29,11 @@ spring.jpa.properties.hibernate.format_sql=true
 # ================================
 # Telegram alerts
 # ================================
+# One bot token is shared by the app. The destination chat id is
+# now per-user (users.telegram_chat_id), set via
+# PUT /api/email/telegram/settings, not a global property.
 
 telegram.bot.token=YOUR_TELEGRAM_BOT_TOKEN
-telegram.chat.id=YOUR_TELEGRAM_CHAT_ID
 
 
 # ================================

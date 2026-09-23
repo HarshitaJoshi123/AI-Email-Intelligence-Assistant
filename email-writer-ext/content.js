@@ -2,16 +2,19 @@
 console.log("MailMind compact analysis UI v1.1.0 loaded");
 
 
-// Single source of truth for the backend URL, so it only
-// needs to change in one place if it's ever moved.
+// =========================================================
+// BACKEND CONFIGURATION
+// =========================================================
+
 const BACKEND_BASE_URL = 'https://mailmind-backend-hr9p.onrender.com';
 
-// How long to wait for the backend before giving up.
 const REQUEST_TIMEOUT_MS = 120000;
 
 
-// Wraps fetch() with an AbortController-based timeout so a
-// slow/unreachable backend can't leave a button stuck loading.
+// =========================================================
+// FETCH WITH TIMEOUT
+// =========================================================
+
 async function fetchWithTimeout(url, options, timeoutMs) {
 
     const controller = new AbortController();
@@ -35,135 +38,164 @@ async function fetchWithTimeout(url, options, timeoutMs) {
 }
 
 
-// Turns technical errors into a clear, user-friendly message
-// without exposing internal details to the user.
+// =========================================================
+// FRIENDLY ERROR MESSAGE
+// =========================================================
+
 function getFriendlyErrorMessage(error) {
 
     if (error && error.name === 'AbortError') {
+
         return 'The request took too long to respond. Please try again.';
     }
 
+
     if (error instanceof TypeError) {
+
         return 'Could not reach the MailMind backend. Please make sure it is running.';
     }
 
+
     if (error && error.code === 'EMPTY_RESPONSE') {
+
         return 'MailMind did not return a valid response. Please try again.';
     }
 
+
     if (error && error.code === 'BACKEND_ERROR') {
+
         return 'MailMind could not process this email right now. Please try again shortly.';
     }
+
+
+    if (error && error.code === 'COMPOSE_BOX_NOT_FOUND') {
+
+        return 'Could not find the Gmail reply box. Please open the reply box and try again.';
+    }
+
+
+    if (error && error.code === 'INSERT_FAILED') {
+
+        return 'AI generated the reply, but Gmail did not accept it. Please click inside the reply box and try again.';
+    }
+
 
     return 'Something went wrong. Please try again.';
 }
 
 
-// STEP 2: Create the AI Reply button
+// =========================================================
+// AI REPLY BUTTON
+// =========================================================
+
 function createAIButton() {
 
-    // Create a new HTML div element
     const button = document.createElement('div');
 
-    // Use Gmail's button styling
     button.className = 'T-I J-J5-Ji aoO v7 T-I-atl L3';
 
-    // Add some space between this button and other buttons
     button.style.marginRight = '8px';
 
-    // Text displayed on the button
     button.innerHTML = 'AI Reply';
 
-    // Tell the browser that this element works like a button
     button.setAttribute('role', 'button');
 
-    // Text shown when we hover over the button
-    button.setAttribute('data-tooltip', 'Generate AI Reply');
+    button.setAttribute(
+        'data-tooltip',
+        'Generate AI Reply'
+    );
 
     return button;
 }
 
 
-// NEW: Create the AI Analyze button
+// =========================================================
+// AI ANALYZE BUTTON
+// =========================================================
+
 function createAnalyzeButton() {
 
-    // Create a new HTML div element
     const button = document.createElement('div');
 
-    // Use Gmail's button styling
     button.className = 'T-I J-J5-Ji aoO v7 T-I-atl L3';
 
-    // Add some space between this button and other buttons
     button.style.marginRight = '8px';
 
-    // Text displayed on the button
     button.innerHTML = 'AI Analyze';
 
-    // Tell the browser that this element works like a button
     button.setAttribute('role', 'button');
 
-    // Text shown when we hover over the button
-    button.setAttribute('data-tooltip', 'Analyze Email');
+    button.setAttribute(
+        'data-tooltip',
+        'Analyze Email'
+    );
 
     return button;
 }
 
 
-// STEP 3: Find and get the email content from Gmail
+// =========================================================
+// GET EMAIL CONTENT
+// =========================================================
+
 function getEmailContent() {
 
-    // Gmail can use different HTML elements for email content.
-    // [role="presentation"] was removed because Gmail applies it
-    // to many layout elements, not just message bodies.
     const selectors = [
         '.h7',
         '.a3s.aiL',
         '.gmail_quote'
     ];
 
-    // Try each selector one by one
+
     for (const selector of selectors) {
 
-        // Gmail can render several messages in a thread at once,
-        // so check every match for this selector.
-        const matches = document.querySelectorAll(selector);
+        const matches =
+            document.querySelectorAll(selector);
 
-        // Gmail lists thread messages oldest to newest, so walk
-        // backwards: the last *visible* match is the message that
-        // is currently open / being replied to, not just whichever
-        // element happens to appear first in the document.
-        for (let i = matches.length - 1; i >= 0; i--) {
+
+        for (
+            let i = matches.length - 1;
+            i >= 0;
+            i--
+        ) {
 
             const element = matches[i];
 
-            // Skip elements that are hidden/collapsed in the DOM
-            const isVisible = element.offsetParent !== null;
+            const isVisible =
+                element.offsetParent !== null;
+
 
             if (!isVisible) {
                 continue;
             }
 
-            const text = element.innerText.trim();
+
+            const text =
+                element.innerText.trim();
+
 
             if (text) {
+
                 return text;
             }
         }
     }
 
-    // If no selector finds visible email content, return an empty string
+
     return '';
 }
 
 
-// STEP 4: Find Gmail's compose toolbar
+// =========================================================
+// FIND COMPOSE TOOLBAR
+// =========================================================
+
 function findComposeToolbar(scope) {
 
-    // Default to the whole document when no specific compose
-    // window is known (keeps this function safe to call directly).
-    const searchRoot = scope || document;
+    const searchRoot =
+        scope || document;
 
-    // Gmail can use different elements for the compose toolbar
+
     const selectors = [
         '.btC',
         '.aDh',
@@ -171,91 +203,1004 @@ function findComposeToolbar(scope) {
         '.gU.Up'
     ];
 
-    // Try each selector one by one
+
     for (const selector of selectors) {
 
-        // Find the toolbar using the current selector, scoped to
-        // the relevant compose window when one is provided
-        const toolbar = searchRoot.querySelector(selector);
+        const toolbar =
+            searchRoot.querySelector(selector);
 
-        // If toolbar is found, return it
+
         if (toolbar) {
+
             return toolbar;
         }
     }
 
-    // If toolbar is not found, return null
+
     return null;
 }
 
 
-function escapeHtml(value) {
-    return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+// =========================================================
+// FIND GMAIL COMPOSE BOX
+// =========================================================
+
+function findComposeBox(scope) {
+
+    const roots = [];
+
+
+    if (scope) {
+
+        roots.push(scope);
+
+        let parent =
+            scope.parentElement;
+
+
+        for (
+            let i = 0;
+            i < 6 && parent;
+            i++
+        ) {
+
+            roots.push(parent);
+
+            parent =
+                parent.parentElement;
+        }
+    }
+
+
+    roots.push(document);
+
+
+    const selectors = [
+
+        '[contenteditable="true"][role="textbox"]',
+
+        '[contenteditable="true"][g_editable="true"]',
+
+        '[role="textbox"][g_editable="true"]',
+
+        'div[contenteditable="true"]'
+    ];
+
+
+    for (const root of roots) {
+
+        for (const selector of selectors) {
+
+            const candidates =
+                root.querySelectorAll(selector);
+
+
+            for (
+                let i = candidates.length - 1;
+                i >= 0;
+                i--
+            ) {
+
+                const element =
+                    candidates[i];
+
+
+                if (
+                    element &&
+                    element.offsetParent !== null
+                ) {
+
+                    return element;
+                }
+            }
+        }
+    }
+
+
+    return null;
 }
 
-function truncateText(value, maxLength) {
-    const text = (value || '').trim();
-    if (!text) {
+
+// =========================================================
+// GET EDITOR TEXT
+// =========================================================
+
+function getEditorText(editor) {
+
+    if (!editor) {
         return '';
     }
-    if (text.length <= maxLength) {
-        return text;
-    }
-    return text.slice(0, maxLength).trim() + '…';
+
+
+    return (
+        editor.innerText ||
+        editor.textContent ||
+        ''
+    ).trim();
 }
 
 
-// Compact Gmail result: status, priority, deadline, action + dashboard link
-function createAnalysisBox(analysis, scope) {
+// =========================================================
+// CHECK WHETHER TEXT WAS INSERTED
+// =========================================================
 
-    const searchRoot = scope || document;
+function editorContainsText(editor, text) {
 
-    const oldBox = searchRoot.querySelector('.ai-analysis-box');
+    if (!editor || !text) {
+
+        return false;
+    }
+
+
+    const editorText =
+        getEditorText(editor);
+
+
+    const targetText =
+        String(text).trim();
+
+
+    if (!editorText || !targetText) {
+
+        return false;
+    }
+
+
+    return editorText.includes(
+        targetText
+    );
+}
+
+
+// =========================================================
+// DISPATCH GMAIL INPUT EVENTS
+// =========================================================
+
+function dispatchEditorInputEvents(
+    editor,
+    text = ''
+) {
+
+    if (!editor) {
+        return;
+    }
+
+
+    try {
+
+        editor.dispatchEvent(
+            new InputEvent(
+                'beforeinput',
+                {
+                    bubbles: true,
+                    cancelable: true,
+                    inputType: 'insertText',
+                    data: text || null
+                }
+            )
+        );
+
+    } catch (error) {
+
+        console.log(
+            'beforeinput event fallback'
+        );
+    }
+
+
+    try {
+
+        editor.dispatchEvent(
+            new InputEvent(
+                'input',
+                {
+                    bubbles: true,
+                    cancelable: true,
+                    inputType: 'insertText',
+                    data: text || null
+                }
+            )
+        );
+
+    } catch (error) {
+
+        editor.dispatchEvent(
+            new Event(
+                'input',
+                {
+                    bubbles: true,
+                    cancelable: true
+                }
+            )
+        );
+    }
+
+
+    editor.dispatchEvent(
+        new Event(
+            'change',
+            {
+                bubbles: true
+            }
+        )
+    );
+}
+
+
+// =========================================================
+// PLACE CURSOR AT END
+// =========================================================
+
+function placeCursorAtEnd(editor) {
+
+    if (!editor) {
+        return false;
+    }
+
+
+    try {
+
+        editor.focus();
+
+
+        const selection =
+            window.getSelection();
+
+
+        const range =
+            document.createRange();
+
+
+        range.selectNodeContents(
+            editor
+        );
+
+
+        range.collapse(false);
+
+
+        if (selection) {
+
+            selection.removeAllRanges();
+
+            selection.addRange(
+                range
+            );
+        }
+
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            'Could not place cursor:',
+            error
+        );
+
+        return false;
+    }
+}
+
+
+// =========================================================
+// INSERT USING EXEC COMMAND
+// =========================================================
+
+function insertUsingExecCommand(
+    editor,
+    text
+) {
+
+    if (!editor || !text) {
+
+        return false;
+    }
+
+
+    try {
+
+        placeCursorAtEnd(
+            editor
+        );
+
+
+        if (
+            typeof document.execCommand ===
+            'function'
+        ) {
+
+            const worked =
+                document.execCommand(
+                    'insertText',
+                    false,
+                    text
+                );
+
+
+            dispatchEditorInputEvents(
+                editor,
+                text
+            );
+
+
+            if (
+                worked &&
+                editorContainsText(
+                    editor,
+                    text
+                )
+            ) {
+
+                return true;
+            }
+
+
+            /*
+             * Gmail may accept the command but update
+             * the contenteditable DOM slightly later.
+             *
+             * The caller performs delayed verification.
+             */
+
+            return worked;
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            'execCommand insertion error:',
+            error
+        );
+    }
+
+
+    return false;
+}
+
+
+// =========================================================
+// INSERT USING RANGE
+// =========================================================
+
+function insertUsingRange(
+    editor,
+    text
+) {
+
+    if (!editor || !text) {
+
+        return false;
+    }
+
+
+    try {
+
+        editor.focus();
+
+
+        const selection =
+            window.getSelection();
+
+
+        const range =
+            document.createRange();
+
+
+        range.selectNodeContents(
+            editor
+        );
+
+
+        range.collapse(false);
+
+
+        if (selection) {
+
+            selection.removeAllRanges();
+
+            selection.addRange(
+                range
+            );
+        }
+
+
+        range.deleteContents();
+
+
+        const fragment =
+            document.createDocumentFragment();
+
+
+        const lines =
+            String(text).split('\n');
+
+
+        lines.forEach(
+            (line, index) => {
+
+                if (index > 0) {
+
+                    fragment.appendChild(
+                        document.createElement(
+                            'br'
+                        )
+                    );
+                }
+
+
+                fragment.appendChild(
+                    document.createTextNode(
+                        line
+                    )
+                );
+            }
+        );
+
+
+        range.insertNode(
+            fragment
+        );
+
+
+        range.collapse(false);
+
+
+        if (selection) {
+
+            selection.removeAllRanges();
+
+            selection.addRange(
+                range
+            );
+        }
+
+
+        dispatchEditorInputEvents(
+            editor,
+            text
+        );
+
+
+        return editorContainsText(
+            editor,
+            text
+        );
+
+    } catch (error) {
+
+        console.error(
+            'Range insertion error:',
+            error
+        );
+    }
+
+
+    return false;
+}
+
+
+// =========================================================
+// WAIT HELPER
+// =========================================================
+
+function wait(ms) {
+
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                ms
+            )
+    );
+}
+
+
+// =========================================================
+// ROBUST GMAIL INSERTION
+// =========================================================
+
+async function insertTextIntoGmailEditor(
+    editor,
+    text
+) {
+
+    if (!editor || !text) {
+
+        return false;
+    }
+
+
+    const cleanText =
+        String(text).trim();
+
+
+    if (!cleanText) {
+
+        return false;
+    }
+
+
+    console.log(
+        'Starting Gmail reply insertion...'
+    );
+
+
+    /*
+     * -----------------------------------------------------
+     * ATTEMPT 1
+     * -----------------------------------------------------
+     *
+     * Use Gmail's contenteditable editor normally.
+     */
+
+    try {
+
+        editor.focus();
+
+        placeCursorAtEnd(
+            editor
+        );
+
+
+        const execResult =
+            insertUsingExecCommand(
+                editor,
+                cleanText
+            );
+
+
+        /*
+         * IMPORTANT:
+         *
+         * Do NOT immediately declare failure.
+         *
+         * Gmail may update its editor asynchronously.
+         */
+
+        await wait(150);
+
+
+        if (
+            editorContainsText(
+                editor,
+                cleanText
+            )
+        ) {
+
+            console.log(
+                'AI Reply inserted successfully on attempt 1'
+            );
+
+            return true;
+        }
+
+
+        await wait(350);
+
+
+        if (
+            editorContainsText(
+                editor,
+                cleanText
+            )
+        ) {
+
+            console.log(
+                'AI Reply inserted successfully after delayed Gmail update'
+            );
+
+            return true;
+        }
+
+
+        console.log(
+            'Attempt 1 did not verify insertion.',
+            execResult
+        );
+
+    } catch (error) {
+
+        console.error(
+            'Attempt 1 failed:',
+            error
+        );
+    }
+
+
+    /*
+     * -----------------------------------------------------
+     * ATTEMPT 2
+     * -----------------------------------------------------
+     *
+     * Re-find the editor because Gmail can replace the
+     * contenteditable element internally.
+     */
+
+    try {
+
+        const freshEditor =
+            findComposeBox(
+                editor.closest(
+                    '[role="dialog"]'
+                ) ||
+                editor.parentElement
+            ) || editor;
+
+
+        freshEditor.focus();
+
+
+        placeCursorAtEnd(
+            freshEditor
+        );
+
+
+        const rangeResult =
+            insertUsingRange(
+                freshEditor,
+                cleanText
+            );
+
+
+        await wait(200);
+
+
+        if (
+            editorContainsText(
+                freshEditor,
+                cleanText
+            )
+        ) {
+
+            console.log(
+                'AI Reply inserted successfully on attempt 2'
+            );
+
+            return true;
+        }
+
+
+        if (rangeResult) {
+
+            return true;
+        }
+
+    } catch (error) {
+
+        console.error(
+            'Attempt 2 failed:',
+            error
+        );
+    }
+
+
+    /*
+     * -----------------------------------------------------
+     * ATTEMPT 3
+     * -----------------------------------------------------
+     *
+     * Gmail sometimes replaces the editor after the first
+     * mutation. Re-query the DOM again and try execCommand.
+     */
+
+    try {
+
+        await wait(300);
+
+
+        const latestEditor =
+            findComposeBox(
+                document
+            );
+
+
+        if (!latestEditor) {
+
+            console.log(
+                'Could not find Gmail editor during attempt 3'
+            );
+
+            return false;
+        }
+
+
+        latestEditor.focus();
+
+
+        placeCursorAtEnd(
+            latestEditor
+        );
+
+
+        try {
+
+            document.execCommand(
+                'insertText',
+                false,
+                cleanText
+            );
+
+        } catch (error) {
+
+            console.error(
+                'Attempt 3 execCommand error:',
+                error
+            );
+        }
+
+
+        dispatchEditorInputEvents(
+            latestEditor,
+            cleanText
+        );
+
+
+        await wait(250);
+
+
+        if (
+            editorContainsText(
+                latestEditor,
+                cleanText
+            )
+        ) {
+
+            console.log(
+                'AI Reply inserted successfully on attempt 3'
+            );
+
+            return true;
+        }
+
+    } catch (error) {
+
+        console.error(
+            'Attempt 3 failed:',
+            error
+        );
+    }
+
+
+    /*
+     * -----------------------------------------------------
+     * FINAL VERIFICATION
+     * -----------------------------------------------------
+     */
+
+    await wait(500);
+
+
+    const finalEditor =
+        findComposeBox(
+            document
+        );
+
+
+    if (
+        finalEditor &&
+        editorContainsText(
+            finalEditor,
+            cleanText
+        )
+    ) {
+
+        console.log(
+            'AI Reply detected in Gmail after final delayed verification'
+        );
+
+        return true;
+    }
+
+
+    console.error(
+        'AI Reply could not be inserted after all attempts.'
+    );
+
+
+    return false;
+}
+
+
+// =========================================================
+// HTML ESCAPING
+// =========================================================
+
+function escapeHtml(value) {
+
+    return String(value ?? '')
+        .replace(
+            /&/g,
+            '&amp;'
+        )
+        .replace(
+            /</g,
+            '&lt;'
+        )
+        .replace(
+            />/g,
+            '&gt;'
+        )
+        .replace(
+            /"/g,
+            '&quot;'
+        );
+}
+
+
+// =========================================================
+// TEXT TRUNCATION
+// =========================================================
+
+function truncateText(
+    value,
+    maxLength
+) {
+
+    const text =
+        (value || '').trim();
+
+
+    if (!text) {
+
+        return '';
+    }
+
+
+    if (
+        text.length <= maxLength
+    ) {
+
+        return text;
+    }
+
+
+    return (
+        text
+            .slice(
+                0,
+                maxLength
+            )
+            .trim()
+        + '…'
+    );
+}
+
+
+// =========================================================
+// CREATE ANALYSIS BOX
+// =========================================================
+
+function createAnalysisBox(
+    analysis,
+    scope
+) {
+
+    const searchRoot =
+        scope || document;
+
+
+    const oldBox =
+        searchRoot.querySelector(
+            '.ai-analysis-box'
+        );
+
 
     if (oldBox) {
+
         oldBox.remove();
     }
 
-    const box = document.createElement('div');
-    box.className = 'ai-analysis-box mailmind-compact-result';
 
-    box.style.background = '#f8fafc';
-    box.style.border = '1px solid #e2e8f0';
-    box.style.borderRadius = '8px';
-    box.style.padding = '8px 10px';
-    box.style.margin = '6px 8px';
-    box.style.fontFamily = 'Google Sans, Roboto, Arial, sans-serif';
-    box.style.fontSize = '12px';
-    box.style.lineHeight = '1.35';
-    box.style.maxWidth = '460px';
-    box.style.display = 'flex';
-    box.style.alignItems = 'center';
-    box.style.justifyContent = 'space-between';
-    box.style.gap = '10px';
-    box.style.boxShadow = 'none';
+    const box =
+        document.createElement(
+            'div'
+        );
 
-    const priority = analysis.priority || 'LOW';
-    const actionText = analysis.actionRequired
-        ? truncateText(analysis.action || 'Action required', 42)
-        : 'No action';
-    const deadlineText = truncateText(analysis.deadline || 'No deadline', 28);
 
-    let priorityBackground = '#e8f5e9';
-    let priorityText = '#1b5e20';
+    box.className =
+        'ai-analysis-box mailmind-compact-result';
 
-    if (priority === 'HIGH') {
-        priorityBackground = '#fce8e6';
-        priorityText = '#c5221f';
-    } else if (priority === 'MEDIUM') {
-        priorityBackground = '#fef7e0';
-        priorityText = '#b06000';
+
+    box.style.background =
+        '#f8fafc';
+
+    box.style.border =
+        '1px solid #e2e8f0';
+
+    box.style.borderRadius =
+        '8px';
+
+    box.style.padding =
+        '8px 10px';
+
+    box.style.margin =
+        '6px 8px';
+
+    box.style.fontFamily =
+        'Google Sans, Roboto, Arial, sans-serif';
+
+    box.style.fontSize =
+        '12px';
+
+    box.style.lineHeight =
+        '1.35';
+
+    box.style.maxWidth =
+        '460px';
+
+    box.style.display =
+        'flex';
+
+    box.style.alignItems =
+        'center';
+
+    box.style.justifyContent =
+        'space-between';
+
+    box.style.gap =
+        '10px';
+
+    box.style.boxShadow =
+        'none';
+
+
+    const priority =
+        analysis.priority ||
+        'LOW';
+
+
+    const actionText =
+        analysis.actionRequired
+            ? truncateText(
+                analysis.action ||
+                'Action required',
+                42
+            )
+            : 'No action';
+
+
+    const deadlineText =
+        truncateText(
+            analysis.deadline ||
+            'No deadline',
+            28
+        );
+
+
+    let priorityBackground =
+        '#e8f5e9';
+
+
+    let priorityText =
+        '#1b5e20';
+
+
+    if (
+        priority === 'HIGH'
+    ) {
+
+        priorityBackground =
+            '#fce8e6';
+
+        priorityText =
+            '#c5221f';
+
+    } else if (
+        priority === 'MEDIUM'
+    ) {
+
+        priorityBackground =
+            '#fef7e0';
+
+        priorityText =
+            '#b06000';
     }
 
+
     box.innerHTML = `
+
         <div style="
             display: flex;
             flex-wrap: wrap;
@@ -264,11 +1209,15 @@ function createAnalysisBox(analysis, scope) {
             min-width: 0;
             flex: 1;
         ">
+
             <span style="
                 color: #0f9d58;
                 font-weight: 600;
                 white-space: nowrap;
-            ">Analyzed</span>
+            ">
+                Analyzed
+            </span>
+
             <span style="
                 background: ${priorityBackground};
                 color: ${priorityText};
@@ -277,20 +1226,31 @@ function createAnalysisBox(analysis, scope) {
                 font-size: 11px;
                 font-weight: 600;
                 white-space: nowrap;
-            ">${escapeHtml(priority)}</span>
-            <span style="color: #5f6368; white-space: nowrap;">
+            ">
+                ${escapeHtml(priority)}
+            </span>
+
+            <span style="
+                color: #5f6368;
+                white-space: nowrap;
+            ">
                 ${escapeHtml(deadlineText)}
             </span>
+
             <span style="
                 color: #3c4043;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 max-width: 180px;
-            ">${escapeHtml(actionText)}</span>
+            ">
+                ${escapeHtml(actionText)}
+            </span>
+
         </div>
+
         <a
-            href="http://localhost:5173/"
+            href="https://ai-email-intelligence-assistant.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
             style="
@@ -304,383 +1264,675 @@ function createAnalysisBox(analysis, scope) {
                 font-weight: 600;
                 white-space: nowrap;
             "
-        >View in MailMind</a>
+        >
+            View in MailMind
+        </a>
     `;
+
 
     return box;
 }
 
 
-// NEW: Show the analysis box inside Gmail
-function showAnalysisBox(analysis, scope) {
+// =========================================================
+// SHOW ANALYSIS BOX
+// =========================================================
 
-    // Find the Gmail compose toolbar for this specific compose window
-    const toolbar = findComposeToolbar(scope);
+function showAnalysisBox(
+    analysis,
+    scope
+) {
 
-    // If toolbar is not found, stop here
+    const toolbar =
+        findComposeToolbar(
+            scope
+        );
+
+
     if (!toolbar) {
-        console.log("Toolbar not found for analysis");
+
+        console.log(
+            "Toolbar not found for analysis"
+        );
+
         return;
     }
 
-    // Create the analysis box
-    const box = createAnalysisBox(analysis, scope);
 
-    // Add the analysis box before the toolbar
-    toolbar.parentElement.insertBefore(box, toolbar);
+    const box =
+        createAnalysisBox(
+            analysis,
+            scope
+        );
+
+
+    toolbar.parentElement.insertBefore(
+        box,
+        toolbar
+    );
 }
 
 
-// STEP 5: Add the AI button to Gmail
+// =========================================================
+// INJECT BUTTONS
+// =========================================================
+
 function injectButton(scope) {
 
-    // Default to the whole document when no specific compose
-    // window is known (keeps this function safe to call directly).
-    const searchRoot = scope || document;
+    const searchRoot =
+        scope || document;
 
-    // Check whether our AI button already exists in this
-    // specific compose window
-    const existingButton = searchRoot.querySelector('.ai-reply-button');
 
-    // Remove the old button to prevent duplicate buttons
+    // -----------------------------------------------------
+    // Remove existing AI Reply button
+    // -----------------------------------------------------
+
+    const existingButton =
+        searchRoot.querySelector(
+            '.ai-reply-button'
+        );
+
+
     if (existingButton) {
+
         existingButton.remove();
     }
 
-    // Remove old analyze button to prevent duplicate buttons
-    const existingAnalyzeButton = searchRoot.querySelector('.ai-analyze-button');
+
+    // -----------------------------------------------------
+    // Remove existing AI Analyze button
+    // -----------------------------------------------------
+
+    const existingAnalyzeButton =
+        searchRoot.querySelector(
+            '.ai-analyze-button'
+        );
+
 
     if (existingAnalyzeButton) {
+
         existingAnalyzeButton.remove();
     }
 
 
-    // Find Gmail's compose toolbar for this compose window
-    const toolbar = findComposeToolbar(searchRoot);
+    // -----------------------------------------------------
+    // Find toolbar
+    // -----------------------------------------------------
 
-    // If toolbar is not found, stop here
+    const toolbar =
+        findComposeToolbar(
+            searchRoot
+        );
+
+
     if (!toolbar) {
-        console.log("Toolbar not found");
+
+        console.log(
+            "Toolbar not found"
+        );
+
         return;
     }
 
-    console.log("Toolbar found, creating AI button");
+
+    console.log(
+        "Toolbar found, creating AI button"
+    );
 
 
-    // Create the AI Reply button
-    const button = createAIButton();
+    // =====================================================
+    // AI REPLY
+    // =====================================================
 
-    // Add our own class to identify the button
-    button.classList.add('ai-reply-button');
-
-    // Tracks whether a Reply request is already in progress for
-    // this button, since setting .disabled on a <div> has no
-    // effect and would otherwise allow duplicate clicks.
-    let isReplyInProgress = false;
+    const button =
+        createAIButton();
 
 
-    // STEP 6: Decide what happens when AI Reply is clicked
-    button.addEventListener('click', async () => {
-
-        if (isReplyInProgress) {
-            return;
-        }
-
-        isReplyInProgress = true;
-
-        try {
-
-            // Show that AI is generating the reply
-            button.innerHTML = 'Generating...';
+    button.classList.add(
+        'ai-reply-button'
+    );
 
 
-            // STEP 7: Get the email content from Gmail
-            const emailContent = getEmailContent();
+    let isReplyInProgress =
+        false;
 
-            // Check if email content was found
-            if (!emailContent) {
-                alert('Could not find email content');
+
+    button.addEventListener(
+        'click',
+        async () => {
+
+            if (isReplyInProgress) {
+
                 return;
             }
 
 
-            // STEP 8: Send the email to our Spring Boot backend
-            const response = await fetchWithTimeout(
-                `${BACKEND_BASE_URL}/api/email/generate`,
-                {
-                    // We are sending data using POST
-                    method: 'POST',
-
-                    // Tell the backend that we are sending JSON
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-
-                    // Convert our data into JSON format
-                    body: JSON.stringify({
-                        emailContent: emailContent,
-                        tone: "professional"
-                    })
-                },
-                REQUEST_TIMEOUT_MS
-            );
+            isReplyInProgress =
+                true;
 
 
-            // STEP 9: Check if the backend request was successful
-            if (!response.ok) {
+            try {
 
-                const errorText = await response.text().catch(() => '');
+                // -------------------------------------------------
+                // Show loading state
+                // -------------------------------------------------
+
+                button.innerHTML =
+                    'Generating...';
+
+
+                // -------------------------------------------------
+                // Get email
+                // -------------------------------------------------
+
+                const emailContent =
+                    getEmailContent();
+
+
+                if (!emailContent) {
+
+                    alert(
+                        'Could not find email content'
+                    );
+
+                    return;
+                }
+
+
+                // -------------------------------------------------
+                // Backend request
+                // -------------------------------------------------
+
+                const response =
+                    await fetchWithTimeout(
+                        `${BACKEND_BASE_URL}/api/email/generate`,
+                        {
+                            method: 'POST',
+
+                            credentials: 'include',
+
+                            headers: {
+                                'Content-Type':
+                                    'application/json'
+                            },
+
+                            body: JSON.stringify({
+                                emailContent:
+                                    emailContent,
+
+                                tone:
+                                    "professional"
+                            })
+                        },
+                        REQUEST_TIMEOUT_MS
+                    );
+
+
+                // -------------------------------------------------
+                // Check backend response
+                // -------------------------------------------------
+
+                if (!response.ok) {
+
+                    const errorText =
+                        await response
+                            .text()
+                            .catch(
+                                () => ''
+                            );
+
+
+                    console.error(
+                        'Reply API Error:',
+                        response.status,
+                        errorText
+                    );
+
+
+                    const requestError =
+                        new Error(
+                            'Backend returned an error'
+                        );
+
+
+                    requestError.code =
+                        'BACKEND_ERROR';
+
+
+                    throw requestError;
+                }
+
+
+                // -------------------------------------------------
+                // Get generated reply
+                // -------------------------------------------------
+
+                const generatedReply =
+                    await response.text();
+
+
+                if (
+                    !generatedReply ||
+                    !generatedReply.trim()
+                ) {
+
+                    const emptyResponseError =
+                        new Error(
+                            'Empty response from server'
+                        );
+
+
+                    emptyResponseError.code =
+                        'EMPTY_RESPONSE';
+
+
+                    throw emptyResponseError;
+                }
+
+
+                console.log(
+                    'AI Reply received from backend:',
+                    generatedReply.length,
+                    'characters'
+                );
+
+
+                // =================================================
+                // IMPORTANT:
+                // Re-find Gmail editor AFTER Gemini response.
+                //
+                // Gmail can replace the editor DOM while the
+                // backend request is running.
+                // =================================================
+
+                let composeBox =
+                    findComposeBox(
+                        searchRoot
+                    );
+
+
+                if (!composeBox) {
+
+                    composeBox =
+                        findComposeBox(
+                            document
+                        );
+                }
+
+
+                if (!composeBox) {
+
+                    const composeError =
+                        new Error(
+                            'Could not find Gmail reply editor'
+                        );
+
+
+                    composeError.code =
+                        'COMPOSE_BOX_NOT_FOUND';
+
+
+                    throw composeError;
+                }
+
+
+                // -------------------------------------------------
+                // Insert reply
+                // -------------------------------------------------
+
+                const inserted =
+                    await insertTextIntoGmailEditor(
+                        composeBox,
+                        generatedReply
+                    );
+
+
+                if (!inserted) {
+
+                    const insertError =
+                        new Error(
+                            'Could not insert the AI reply into Gmail'
+                        );
+
+
+                    insertError.code =
+                        'INSERT_FAILED';
+
+
+                    throw insertError;
+                }
+
+
+                console.log(
+                    'AI Reply inserted into Gmail successfully'
+                );
+
+
+            } catch (error) {
 
                 console.error(
-                    'Reply API Error:',
-                    response.status,
-                    errorText
+                    'AI Reply error:',
+                    error
                 );
 
-                const requestError = new Error('Backend returned an error');
-                requestError.code = 'BACKEND_ERROR';
-                throw requestError;
-            }
 
-
-            // STEP 10: Get the AI-generated reply from the backend
-            const generatedReply = await response.text();
-
-            if (!generatedReply || !generatedReply.trim()) {
-
-                const emptyResponseError = new Error('Empty response from server');
-                emptyResponseError.code = 'EMPTY_RESPONSE';
-                throw emptyResponseError;
-            }
-
-
-            // STEP 11: Find Gmail's reply/compose text box for
-            // this specific compose window
-            const composeBox = searchRoot.querySelector(
-                '[role="textbox"][g_editable="true"]'
-            );
-
-
-            // STEP 12: Put the generated reply inside Gmail
-            if (composeBox) {
-
-                // Focus on the reply box
-                composeBox.focus();
-
-                // Insert the generated reply
-                document.execCommand(
-                    'insertText',
-                    false,
-                    generatedReply
+                alert(
+                    getFriendlyErrorMessage(
+                        error
+                    )
                 );
 
-            } else {
 
-                // Show an error if the reply box was not found
-                console.error('Compose box was not found');
+            } finally {
+
+                button.innerHTML =
+                    'AI Reply';
+
+
+                isReplyInProgress =
+                    false;
             }
-
-
-        } catch (error) {
-
-            // STEP 13: Handle any error
-            console.error(error);
-
-            // Show a clear, user-friendly error message
-            alert(getFriendlyErrorMessage(error));
-
-        } finally {
-
-            // STEP 14: Reset the button after the request finishes
-            button.innerHTML = 'AI Reply';
-
-            isReplyInProgress = false;
         }
-    });
+    );
 
 
-    // NEW: Create the AI Analyze button
-    const analyzeButton = createAnalyzeButton();
+    // =====================================================
+    // AI ANALYZE
+    // =====================================================
 
-    // Add our own class to identify the button
-    analyzeButton.classList.add('ai-analyze-button');
-
-    // Tracks whether an Analyze request is already in progress
-    // for this button, for the same reason as isReplyInProgress.
-    let isAnalyzeInProgress = false;
+    const analyzeButton =
+        createAnalyzeButton();
 
 
-    // NEW: Decide what happens when AI Analyze is clicked
-    analyzeButton.addEventListener('click', async () => {
-
-        if (isAnalyzeInProgress) {
-            return;
-        }
-
-        isAnalyzeInProgress = true;
-
-        try {
-
-            // Show that AI is analyzing the email
-            analyzeButton.innerHTML = 'Analyzing...';
+    analyzeButton.classList.add(
+        'ai-analyze-button'
+    );
 
 
-            // Get the email content from Gmail
-            const emailContent = getEmailContent();
+    let isAnalyzeInProgress =
+        false;
 
-            // Check if email content was found
-            if (!emailContent) {
-                alert('Could not find email content');
+
+    analyzeButton.addEventListener(
+        'click',
+        async () => {
+
+            if (isAnalyzeInProgress) {
+
                 return;
             }
 
 
-            // Send the email to our Spring Boot analysis endpoint
-            const response = await fetchWithTimeout(
-                `${BACKEND_BASE_URL}/api/email/analyze`,
-                {
-                    // We are sending data using POST
-                    method: 'POST',
-
-                    // Tell the backend that we are sending JSON
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-
-                    // Convert our data into JSON format
-                    body: JSON.stringify({
-                        emailContent: emailContent,
-                        tone: "professional"
-                    })
-                },
-                REQUEST_TIMEOUT_MS
-            );
+            isAnalyzeInProgress =
+                true;
 
 
-            // Check if the backend request was successful
-            if (!response.ok) {
+            try {
 
-                // Get the error message from the backend
-                const errorText = await response.text().catch(() => '');
+                analyzeButton.innerHTML =
+                    'Analyzing...';
 
-                // Show the actual error in the console
-                console.error(
-                    'Analysis API Error:',
-                    response.status,
-                    errorText
+
+                // -------------------------------------------------
+                // Get email
+                // -------------------------------------------------
+
+                const emailContent =
+                    getEmailContent();
+
+
+                if (!emailContent) {
+
+                    alert(
+                        'Could not find email content'
+                    );
+
+                    return;
+                }
+
+
+                // -------------------------------------------------
+                // Backend analysis request
+                // -------------------------------------------------
+
+                const response =
+                    await fetchWithTimeout(
+                        `${BACKEND_BASE_URL}/api/email/analyze`,
+                        {
+                            method: 'POST',
+
+                            credentials: 'include',
+
+                            headers: {
+                                'Content-Type':
+                                    'application/json'
+                            },
+
+                            body: JSON.stringify({
+                                emailContent:
+                                    emailContent,
+
+                                tone:
+                                    "professional"
+                            })
+                        },
+                        REQUEST_TIMEOUT_MS
+                    );
+
+
+                // -------------------------------------------------
+                // Check backend response
+                // -------------------------------------------------
+
+                if (!response.ok) {
+
+                    const errorText =
+                        await response
+                            .text()
+                            .catch(
+                                () => ''
+                            );
+
+
+                    console.error(
+                        'Analysis API Error:',
+                        response.status,
+                        errorText
+                    );
+
+
+                    const requestError =
+                        new Error(
+                            'Backend returned an error'
+                        );
+
+
+                    requestError.code =
+                        'BACKEND_ERROR';
+
+
+                    throw requestError;
+                }
+
+
+                // -------------------------------------------------
+                // Parse analysis
+                // -------------------------------------------------
+
+                const analysis =
+                    await response.json();
+
+
+                if (
+                    !analysis ||
+                    typeof analysis !== 'object'
+                ) {
+
+                    const emptyResponseError =
+                        new Error(
+                            'Invalid response from server'
+                        );
+
+
+                    emptyResponseError.code =
+                        'EMPTY_RESPONSE';
+
+
+                    throw emptyResponseError;
+                }
+
+
+                // -------------------------------------------------
+                // Show analysis
+                // -------------------------------------------------
+
+                showAnalysisBox(
+                    analysis,
+                    searchRoot
                 );
 
-                const requestError = new Error('Backend returned an error');
-                requestError.code = 'BACKEND_ERROR';
-                throw requestError;
+
+            } catch (error) {
+
+                console.error(
+                    'AI Analyze error:',
+                    error
+                );
+
+
+                alert(
+                    getFriendlyErrorMessage(
+                        error
+                    )
+                );
+
+
+            } finally {
+
+                analyzeButton.innerHTML =
+                    'AI Analyze';
+
+
+                isAnalyzeInProgress =
+                    false;
             }
-
-
-            // Get the analysis response as JSON
-            const analysis = await response.json();
-
-            // Make sure the backend actually returned a usable
-            // analysis object before trying to display it
-            if (!analysis || typeof analysis !== 'object') {
-
-                const emptyResponseError = new Error('Invalid response from server');
-                emptyResponseError.code = 'EMPTY_RESPONSE';
-                throw emptyResponseError;
-            }
-
-            // Show the analysis inside Gmail, in this compose window
-            showAnalysisBox(analysis, searchRoot);
-
-
-        } catch (error) {
-
-            // Handle any error
-            console.error(error);
-
-            // Show a clear, user-friendly error message
-            alert(getFriendlyErrorMessage(error));
-
-        } finally {
-
-            // Reset the button after the request finishes
-            analyzeButton.innerHTML = 'AI Analyze';
-
-            isAnalyzeInProgress = false;
         }
-    });
+    );
 
 
-    // STEP 15: Add the AI button to the Gmail toolbar
-    toolbar.insertBefore(button, toolbar.firstChild);
+    // =====================================================
+    // ADD BUTTONS TO TOOLBAR
+    // =====================================================
 
-    // Add the AI Analyze button next to AI Reply
-    toolbar.insertBefore(analyzeButton, button.nextSibling);
+    toolbar.insertBefore(
+        button,
+        toolbar.firstChild
+    );
+
+
+    toolbar.insertBefore(
+        analyzeButton,
+        button.nextSibling
+    );
 }
 
 
-// STEP 16: Watch Gmail for changes
-// Gmail creates compose windows dynamically,
-// so we need to detect when a new compose window appears.
+// =========================================================
+// GMAIL MUTATION OBSERVER
+// =========================================================
 
-// Tracks compose containers that already have an injection
-// scheduled, so rapid repeated mutations for the same compose
-// window (common while Gmail animates it open) don't trigger
-// redundant work. injectButton() is idempotent on its own, but
-// this avoids doing the work multiple times in the first place.
-const scheduledContainers = new WeakSet();
+const scheduledContainers =
+    new WeakSet();
 
-const observer = new MutationObserver((mutations) => {
 
-    // Check every change detected on the Gmail page
-    for (const mutation of mutations) {
+const observer =
+    new MutationObserver(
+        (mutations) => {
 
-        // Get the elements that were newly added
-        const addedNodes = Array.from(mutation.addedNodes);
+            for (const mutation of mutations) {
 
-        for (const node of addedNodes) {
+                const addedNodes =
+                    Array.from(
+                        mutation.addedNodes
+                    );
 
-            if (node.nodeType !== Node.ELEMENT_NODE) {
-                continue;
+
+                for (const node of addedNodes) {
+
+                    if (
+                        node.nodeType !==
+                        Node.ELEMENT_NODE
+                    ) {
+
+                        continue;
+                    }
+
+
+                    const composeContainer =
+                        node.matches(
+                            '.aDh, .btC, [role="dialog"]'
+                        )
+                            ? node
+                            : node.querySelector(
+                                '.aDh, .btC, [role="dialog"]'
+                            );
+
+
+                    if (!composeContainer) {
+
+                        continue;
+                    }
+
+
+                    if (
+                        scheduledContainers.has(
+                            composeContainer
+                        )
+                    ) {
+
+                        continue;
+                    }
+
+
+                    scheduledContainers.add(
+                        composeContainer
+                    );
+
+
+                    console.log(
+                        "Compose Window Detected"
+                    );
+
+
+                    setTimeout(
+                        () => {
+
+                            scheduledContainers.delete(
+                                composeContainer
+                            );
+
+
+                            injectButton(
+                                composeContainer
+                            );
+
+                        },
+                        500
+                    );
+                }
             }
-
-            // Identify the specific compose window that was
-            // added, so buttons can be attached to the correct
-            // one instead of always searching the whole document.
-            const composeContainer = node.matches(
-                '.aDh, .btC, [role="dialog"]'
-            )
-                ? node
-                : node.querySelector('.aDh, .btC, [role="dialog"]');
-
-            if (!composeContainer) {
-                continue;
-            }
-
-            if (scheduledContainers.has(composeContainer)) {
-                continue;
-            }
-
-            scheduledContainers.add(composeContainer);
-
-            console.log("Compose Window Detected");
-
-            // Wait 500ms and then add our AI button to this
-            // specific compose window
-            setTimeout(() => {
-                scheduledContainers.delete(composeContainer);
-                injectButton(composeContainer);
-            }, 500);
         }
+    );
+
+
+// =========================================================
+// START OBSERVER
+// =========================================================
+
+observer.observe(
+    document.body,
+    {
+        childList: true,
+        subtree: true
     }
-});
-
-
-// STEP 17: Start watching the Gmail page
-observer.observe(document.body, {
-
-    // Watch for new elements being added
-    childList: true,
-
-    // Also watch elements inside other elements
-    subtree: true
-});
+);
